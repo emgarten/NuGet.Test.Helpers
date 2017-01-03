@@ -80,3 +80,25 @@ Function Install-PackagesConfig {
 Function Get-BuildNumber([string]$inputDate) {
     [int](((Get-Date) - (Get-Date $inputDate)).TotalMinutes / 5)
 }
+
+Function Get-SleetConfig {
+    param(
+        [string]$RepositoryRootDir
+    )
+
+    $path = Join-Path $RepositoryRootDir "sleet.json"
+
+    if (-not (Test-Path $path))
+    {
+        $parentPath =(get-item $RepositoryRootDir ).parent.FullName
+
+        $path = Join-Path $parentPath "sleet.json"
+    }
+
+    if (-not (Test-Path $path))
+    {
+        $path = "sleet.json"
+    }
+
+    return $path
+}

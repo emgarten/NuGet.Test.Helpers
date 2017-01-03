@@ -8,8 +8,7 @@ param (
 $BuildNumberDateBase = "2017-01-02"
 $RepoRoot = $PSScriptRoot
 $PackageId = "NuGet.Test.Helpers"
-$SleetConfig = Join-Path $RepoRoot "sleet.json"
-$SleetFeedId = "nugettesthelpers"
+$SleetFeedId = "packages"
 
 # Load common build script helper methods
 . "$PSScriptRoot\build\common.ps1"
@@ -84,12 +83,11 @@ if (-not $SkipPack)
     Write-Host "-----------------------------"
 }
 
-Write-Host "Branch: $gitBranch"
-Write-Host "Sleet Config: $SleetConfig"
+$SleetConfig = Get-SleetConfig $RepoRoot
 
 if ($Push -and (Test-Path $SleetConfig) -and ($gitBranch -eq "master"))
 {
-    & $sleetExe push --config $SleetConfig --source $SleetFeedId $ArtifactsDir
+    & $sleetExe push --source $SleetFeedId --config $SleetConfig $ArtifactsDir
 
     if (-not $?)
     {
@@ -97,7 +95,7 @@ if ($Push -and (Test-Path $SleetConfig) -and ($gitBranch -eq "master"))
        exit 1
     }
 
-    & $sleetExe validate --config $SleetConfig --source $SleetFeedId
+    & $sleetExe validate --source $SleetFeedId --config $SleetConfig
 
     if (-not $?)
     {
