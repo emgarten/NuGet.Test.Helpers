@@ -1,7 +1,7 @@
 param (
     [switch]$SkipTests,
     [switch]$SkipPack,
-    [switch]$SkipPush,
+    [switch]$Push,
     [switch]$StableVersion
 )
 
@@ -87,7 +87,7 @@ if (-not $SkipPack)
 Write-Host "Branch: $gitBranch"
 Write-Host "Sleet Config: $SleetConfig"
 
-if ((-not $SkipPush) -and (Test-Path $SleetConfig) -and ($gitBranch -eq "master"))
+if ($Push -and (Test-Path $SleetConfig) -and ($gitBranch -eq "master"))
 {
     & $sleetExe push --config $SleetConfig --source $SleetFeedId $ArtifactsDir
 
