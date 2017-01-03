@@ -35,7 +35,13 @@ $gitBranch = git rev-parse --abbrev-ref HEAD | Out-String
 $gitBranch = $gitBranch.Trim()
 
 # Restore project.json files
-& $dotnetExe restore (Join-Path $RepoRoot $PackageId.sln)
+& $dotnetExe restore (Join-Path $RepoRoot "$PackageId.sln")
+
+if (-not $?)
+{
+    Write-Host "Restore failed!"
+    exit 1
+}
 
 # Run tests
 if (-not $SkipTests)
