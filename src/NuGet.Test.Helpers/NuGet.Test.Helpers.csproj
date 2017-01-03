@@ -1,4 +1,7 @@
-<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
+﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
+  <PropertyGroup Label="Configuration">
+    <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+  </PropertyGroup>
   <PropertyGroup>
     <TargetFramework>netstandard1.3</TargetFramework>
     <Version>0.1.0</Version>
@@ -6,6 +9,8 @@
     <Owners>emgarten</Owners>
     <Description>NuGet helpers for creating test nupkgs.</Description>
     <ProjectUrl>https://github.com/emgarten/nuget.test.helpers</ProjectUrl>
+    <DocumentationFile>$(OutputPath)\$(AssemblyName).xml</DocumentationFile>
+    <NoWarn>1591;1573</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="**\*.cs" />
