@@ -5,6 +5,7 @@
     <Authors>emgarten</Authors>
     <Owners>emgarten</Owners>
     <Description>NuGet helpers for creating test nupkgs.</Description>
+    <ProjectUrl>https://github.com/emgarten/nuget.test.helpers</ProjectUrl>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="**\*.cs" />
