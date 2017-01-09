@@ -89,6 +89,11 @@ namespace NuGet.Test.Helpers
                 Message = message;
                 Time = DateTimeOffset.UtcNow;
             }
+
+            public override string ToString()
+            {
+                return Message;
+            }
         }
     }
 }
