@@ -43,6 +43,14 @@ if (-not $?)
     exit 1
 }
 
+& $dotnetExe build (Join-Path $RepoRoot "$PackageId.sln") --configuration release /m
+
+if (-not $?)
+{
+    Write-Host "Build failed!"
+    exit 1
+}
+
 # Run tests
 if (-not $SkipTests)
 {
