@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
   <ImportGroup>
-     <Import Project="..\..\build\common.props" />
+    <Import Project="..\..\build\common.props" />
   </ImportGroup>
   <PropertyGroup Label="Configuration">
     <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
@@ -15,10 +15,6 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
   </PropertyGroup>
-  <ItemGroup>
-    <Compile Include="**\*.cs" />
-    <EmbeddedResource Include="**\*.resx" />
-  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="FluentAssertions" Version="4.18.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk">
