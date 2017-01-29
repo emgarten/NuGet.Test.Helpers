@@ -1,9 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
-  <PropertyGroup Label="Configuration">
-    <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+  <ImportGroup>
+    <Import Project="..\..\build\common.props" />
+  </ImportGroup>  
+  <PropertyGroup Condition=" '$(IsXPlat)' != 'true' ">
+    <TargetFrameworks>netstandard1.3;net46</TargetFrameworks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(IsXPlat)' == 'true' ">
+    <TargetFrameworks>netstandard1.3</TargetFrameworks>
   </PropertyGroup>
   <PropertyGroup>
-    <TargetFrameworks>netstandard1.3;net46</TargetFrameworks>
     <Version>0.1.0</Version>
     <Authors>emgarten</Authors>
     <Description>NuGet helpers for creating test nupkgs.</Description>
@@ -13,8 +18,5 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="NuGet.Packaging" Version="3.5.0" />
-  </ItemGroup>
-  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.3' ">
-    <PackageReference Include="NETStandard.Library" Version="1.6" />
   </ItemGroup>
 </Project>
