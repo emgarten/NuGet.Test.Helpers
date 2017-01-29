@@ -102,3 +102,34 @@ Function Get-SleetConfig {
 
     return $path
 }
+
+# Tests
+Function Run-Tests {
+    param(
+        [string]$RepoRoot,
+        [string]$DotnetExe
+    )
+
+    Write-Host "Running Tests"
+
+    $failed = $false
+
+    Get-ChildItem (Join-Path $RepoRoot "test") -Filter *.csproj -Recurse | 
+    Foreach-Object {
+        $testProject = $_.FullName
+        Write-Host $testProject
+
+        & $dotnetExe test $testProject -c release --no-build
+
+        if (-not $?)
+        {
+            Write-Host "$testProject FAILED!!!"
+            $failed = $true
+        }
+    }
+
+    if ($failed -eq $true)
+    {
+        exit 1
+    }
+}

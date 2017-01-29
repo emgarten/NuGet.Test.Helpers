@@ -1,7 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
-  <ImportGroup>
-    <Import Project="..\..\build\common.props" />
-  </ImportGroup>  
+  <Import Project="..\..\build\common.props" />
   <PropertyGroup Condition=" '$(IsXPlat)' != 'true' ">
     <TargetFrameworks>netcoreapp1.0;net46</TargetFrameworks>
     <RuntimeIdentifier>win7-x64</RuntimeIdentifier>
@@ -9,10 +7,9 @@
   <PropertyGroup Condition=" '$(IsXPlat)' == 'true' ">
     <TargetFrameworks>netcoreapp1.0</TargetFrameworks>
   </PropertyGroup>
-  <ImportGroup>
-    <Import Project="..\..\build\test.targets" />
-  </ImportGroup>  
   <ItemGroup>
     <ProjectReference Include="..\..\src\NuGet.Test.Helpers\NuGet.Test.Helpers.csproj" />
   </ItemGroup>
+  <Import Project="..\..\build\test.targets" />
+  <Import Project="..\..\build\common.targets" />
 </Project>

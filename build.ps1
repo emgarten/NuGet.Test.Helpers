@@ -54,13 +54,7 @@ if (-not $?)
 # Run tests
 if (-not $SkipTests)
 {
-    & $dotnetExe test (Join-Path $RepoRoot "test\$PackageId.Tests\$PackageId.Tests.csproj")
-
-    if (-not $?)
-    {
-        Write-Host "tests failed!!!"
-        exit 1
-    }
+    Run-Tests $RepoRoot $DotnetExe
 }
 
 if (-not $SkipPack)
@@ -68,13 +62,13 @@ if (-not $SkipPack)
     # Pack
     if ($StableVersion)
     {
-        & $dotnetExe pack (Join-Path $RepoRoot "src\$PackageId\$PackageId.csproj") --configuration release --output $ArtifactsDir /p:NoPackageAnalysis=true
+        & $dotnetExe pack (Join-Path $RepoRoot "src\$PackageId\$PackageId.csproj") --no-build --configuration release --output $ArtifactsDir /p:NoPackageAnalysis=true
     }
     else
     {
         $buildNumber = Get-BuildNumber $BuildNumberDateBase
 
-        & $dotnetExe pack (Join-Path $RepoRoot "src\$PackageId\$PackageId.csproj") --configuration release --output $ArtifactsDir --version-suffix "beta.$buildNumber" /p:NoPackageAnalysis=true
+        & $dotnetExe pack (Join-Path $RepoRoot "src\$PackageId\$PackageId.csproj") --no-build --configuration release --output $ArtifactsDir --version-suffix "beta.$buildNumber" /p:NoPackageAnalysis=true
     }
 
     if (-not $?)
