@@ -3,16 +3,19 @@
 RESULTCODE=0
 
 # Download dotnet cli
-echo "Installing dotnet"
-mkdir -p .cli
-curl -o .cli/dotnet-install.sh https://raw.githubusercontent.com/dotnet/cli/58b0566d9ac399f5fa973315c6827a040b7aae1f/scripts/obtain/dotnet-install.sh
+DOTNET="$(pwd)/.cli/dotnet"
 
-# Run install.sh
-chmod +x .cli/dotnet-install.sh
-.cli/dotnet-install.sh -i .cli -c preview -v 1.0.0-rc4-004706
+if [ ! -f $DOTNET ]; then
+    echo "Installing dotnet"
+    mkdir -p .cli
+    curl -o .cli/dotnet-install.sh https://raw.githubusercontent.com/dotnet/cli/58b0566d9ac399f5fa973315c6827a040b7aae1f/scripts/obtain/dotnet-install.sh
+
+    # Run install.sh
+    chmod +x .cli/dotnet-install.sh
+    .cli/dotnet-install.sh -i .cli -c preview -v 1.0.0-rc4-004706
+fi
 
 # Display info
-DOTNET="$(pwd)/.cli/dotnet"
 $DOTNET --info
 
 # clean up
@@ -28,7 +31,7 @@ if [ $? -ne 0 ]; then
 fi
 
 # build
-$DOTNET build $(pwd) -c release
+$DOTNET build $(pwd) -c Release
 
 if [ $? -ne 0 ]; then
     echo "Build FAILED!"
@@ -38,9 +41,11 @@ fi
 # run all test projects under test/
 for testProject in `find test -type f -name *.csproj`
 do
-	testDir="$(pwd)/$(dirname $testProject)"
+	testDir="$(pwd)/$testProject"
 
-	$DOTNET test testDir -f netcoreapp1.0 --no-build -r $(pwd)/artifacts
+	echo $testDir
+
+	$DOTNET test $testDir -f netcoreapp1.0 --no-build -r $(pwd)/artifacts -c Release
 
 	if [ $? -ne 0 ]; then
 	    echo "$testProject FAILED!"
@@ -54,7 +59,7 @@ if [ $RESULTCODE -ne 0 ]; then
 fi
 
 # pack
-$DOTNET pack --no-build -o $(pwd)/artifacts
+$DOTNET pack $(pwd)/src/NuGet.Test.Helpers/NuGet.Test.Helpers.csproj --no-build -o $(pwd)/artifacts -c Release
 
 if [ $RESULTCODE -ne 0 ]; then
     echo "pack FAILED!"
@@ -62,3 +67,4 @@ if [ $RESULTCODE -ne 0 ]; then
 fi
 
 exit $RESULTCODE
+
