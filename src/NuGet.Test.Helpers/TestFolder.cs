@@ -8,6 +8,9 @@ namespace NuGet.Test.Helpers
     /// </summary>
     public class TestFolder : IDisposable
     {
+        // The actual root
+        private readonly DirectoryInfo _parent;
+
         public string Root
         {
             get
@@ -16,35 +19,27 @@ namespace NuGet.Test.Helpers
             }
         }
 
-        public string Working
-        {
-            get
-            {
-                return WorkingDirectory.FullName;
-            }
-        }
+        /// <summary>
+        /// Delete the directory after completion.
+        /// </summary>
+        public bool CleanUp { get; set; } = true;
 
         /// <summary>
         /// Root directory, parent of the working directory
         /// </summary>
         public DirectoryInfo RootDirectory { get; }
 
-        /// <summary>
-        /// Working directory
-        /// </summary>
-        public DirectoryInfo WorkingDirectory { get; }
-
         public TestFolder()
         {
-            RootDirectory = new DirectoryInfo(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()));
+            var parts = Guid.NewGuid().ToString().ToLowerInvariant().Split('-');
 
+            _parent = new DirectoryInfo(Path.Combine(Path.GetTempPath(), parts[0]));
+            _parent.Create();
+
+            File.WriteAllText(Path.Combine(_parent.FullName, "trace.txt"), Environment.StackTrace);
+
+            RootDirectory = new DirectoryInfo(Path.Combine(_parent.FullName, parts[1]));
             RootDirectory.Create();
-
-            File.WriteAllText(Path.Combine(Root, "trace.txt"), Environment.StackTrace);
-
-            WorkingDirectory = new DirectoryInfo(Path.Combine(RootDirectory.FullName, "working"));
-
-            WorkingDirectory.Create();
         }
 
         public static implicit operator string(TestFolder folder)
@@ -59,12 +54,15 @@ namespace NuGet.Test.Helpers
 
         public void Dispose()
         {
-            try
+            if (CleanUp)
             {
-                RootDirectory.Delete(true);
-            }
-            catch
-            {
+                try
+                {
+                    _parent.Delete(true);
+                }
+                catch
+                {
+                }
             }
         }
     }

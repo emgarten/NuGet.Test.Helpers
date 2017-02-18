@@ -22,8 +22,8 @@ Install-PackagesConfig $RepoRoot
 $ArtifactsDir = Join-Path $RepoRoot 'artifacts'
 $nugetExe = Join-Path $RepoRoot '.nuget\nuget.exe'
 $dotnetExe = Get-DotnetCLIExe $RepoRoot
-$nupkgWrenchExe = Join-Path $RepoRoot "packages\NupkgWrench.1.1.0\tools\NupkgWrench.exe"
-$sleetExe = Join-Path $RepoRoot "packages\Sleet.1.0.1\tools\Sleet.exe"
+$nupkgWrenchExe = Join-Path $RepoRoot "packages\NupkgWrench.1.1.1\tools\NupkgWrench.exe"
+$sleetExe = Join-Path $RepoRoot "packages\Sleet.1.1.0-beta.296\tools\Sleet.exe"
 
 # Clear artifacts
 Remove-Item -Recurse -Force $ArtifactsDir | Out-Null
@@ -60,16 +60,7 @@ if (-not $SkipTests)
 if (-not $SkipPack)
 {
     # Pack
-    if ($StableVersion)
-    {
-        & $dotnetExe pack (Join-Path $RepoRoot "src\$PackageId\$PackageId.csproj") --no-build --configuration release --output $ArtifactsDir /p:NoPackageAnalysis=true
-    }
-    else
-    {
-        $buildNumber = Get-BuildNumber $BuildNumberDateBase
-
-        & $dotnetExe pack (Join-Path $RepoRoot "src\$PackageId\$PackageId.csproj") --no-build --configuration release --output $ArtifactsDir --version-suffix "beta.$buildNumber" /p:NoPackageAnalysis=true
-    }
+    & $dotnetExe pack (Join-Path $RepoRoot "src\$PackageId\$PackageId.csproj") --no-build --configuration release --output $ArtifactsDir /p:NoPackageAnalysis=true
 
     if (-not $?)
     {
@@ -77,14 +68,21 @@ if (-not $SkipPack)
        exit 1
     }
 
+    $buildNumber = Get-BuildNumber $BuildNumberDateBase
+
     # Get version number
-    $nupkgVersion = (& $nupkgWrenchExe version $ArtifactsDir --exclude-symbols -id $PackageId) | Out-String
+    $nupkgVersion = (& $nupkgWrenchExe version $ArtifactsDir\$PackageId.*.nupkg --exclude-symbols --id $PackageId) | Out-String
     $nupkgVersion = $nupkgVersion.Trim()
+
+    if (-not $StableVersion)
+    {
+        $nupkgVersion = $nupkgVersion + "-" + "beta.$buildNumber"
+    }
 
     $updatedVersion = $nupkgVersion + "+git." + $commitHash
 
-    & $nupkgWrenchExe nuspec edit --property version --value $updatedVersion $ArtifactsDir --exclude-symbols -id $PackageId
-    & $nupkgWrenchExe updatefilename $ArtifactsDir --exclude-symbols -id $PackageId
+    & $nupkgWrenchExe nuspec edit --property version --value $updatedVersion $ArtifactsDir --id $PackageId
+    & $nupkgWrenchExe updatefilename $ArtifactsDir --id $PackageId
 
     Write-Host "-----------------------------"
     Write-Host "Version: $updatedVersion"
