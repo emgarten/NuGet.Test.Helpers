@@ -2,6 +2,7 @@
   <Import Project="..\..\build\common.props" />
   <Import Project="..\..\build\nuspec.props" />
   <Import Project="..\..\build\docs.props" />
+  <Import Project="..\..\build\sourcelink.props" />
   <PropertyGroup Condition=" '$(IsXPlat)' != 'true' ">
     <TargetFrameworks>netstandard1.3;net46</TargetFrameworks>
   </PropertyGroup>
