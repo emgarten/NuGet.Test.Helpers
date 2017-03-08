@@ -12,7 +12,7 @@ if [ ! -f $DOTNET ]; then
 
     # Run install.sh
     chmod +x .cli/dotnet-install.sh
-    .cli/dotnet-install.sh -i .cli -c preview -v 1.0.0-rc4-004842
+    .cli/dotnet-install.sh -i .cli -c preview -v 1.0.0
 fi
 
 # Display info
