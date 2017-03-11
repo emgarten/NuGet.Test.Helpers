@@ -1,0 +1,38 @@
+﻿<Project ToolsVersion="15.0">
+  <!-- Version -->
+  <PropertyGroup>
+    <StableVersion>1.0.0</StableVersion>
+    <ReleaseLabel>beta</ReleaseLabel>
+  </PropertyGroup>
+
+  <!-- Dependency versions -->
+  <PropertyGroup>
+    <NuGetPackageVersion>4.0.0</NuGetPackageVersion>
+  </PropertyGroup>
+  
+  <!-- Config -->
+  <PropertyGroup>
+    <RepositoryName>NuGet.Test.Helpers</RepositoryName>
+  </PropertyGroup>
+
+  <!-- Nuspec defaults -->
+  <PropertyGroup>
+    <Authors>emgarten</Authors>
+    <ProjectUrl>https://github.com/emgarten/nuget.test.helpers</ProjectUrl>
+    <PackageLicenseUrl>https://github.com/emgarten/nuget.test.helpers/blob/master/LICENSE.md</PackageLicenseUrl>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/emgarten/nuget.test.helpers</RepositoryUrl>
+    <PackageTags>nuget</PackageTags>
+    <Description>NuGet helpers for creating test nupkgs.</Description>
+    <Copyright>Copyright © 2017 Justin Emgarten</Copyright>
+  </PropertyGroup>
+
+  <!-- Common -->
+  <PropertyGroup>
+    <RepositoryRootDirectory>$(MSBuildThisFileDirectory)</RepositoryRootDirectory>
+    <BuildCommonDirectory>$(MSBuildThisFileDirectory)build\common</BuildCommonDirectory>
+    <SolutionFile>$(MSBuildThisFileDirectory)$(RepositoryName).sln</SolutionFile>
+    <ArtifactsDirectory>$(MSBuildThisFileDirectory)artifacts</ArtifactsDirectory>
+    <DotnetExePath>$(MSBuildThisFileDirectory).cli\dotnet.exe</DotnetExePath>
+  </PropertyGroup>
+</Project>

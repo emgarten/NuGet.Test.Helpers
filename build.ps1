@@ -1,17 +1,14 @@
 param (
     [switch]$SkipTests,
     [switch]$SkipPack,
-    [switch]$Push,
-    [switch]$StableVersion
+    [switch]$Push
 )
 
-$BuildNumberDateBase = "2017-01-02"
 $RepoRoot = $PSScriptRoot
-$PackageId = "NuGet.Test.Helpers"
 $SleetFeedId = "packages"
 
 # Load common build script helper methods
-. "$PSScriptRoot\build\common.ps1"
+. "$PSScriptRoot\build\common\common.ps1"
 
 # Ensure dotnet.exe exists in .cli
 Install-DotnetCLI $RepoRoot
@@ -20,22 +17,20 @@ Install-DotnetCLI $RepoRoot
 Install-PackagesConfig $RepoRoot
 
 $ArtifactsDir = Join-Path $RepoRoot 'artifacts'
-$nugetExe = Join-Path $RepoRoot '.nuget\nuget.exe'
 $dotnetExe = Get-DotnetCLIExe $RepoRoot
-$nupkgWrenchExe = Join-Path $RepoRoot "packages\NupkgWrench.1.1.1\tools\NupkgWrench.exe"
 $sleetExe = Join-Path $RepoRoot "packages\Sleet.1.1.0-beta.296\tools\Sleet.exe"
 
-# Clear artifacts
-Remove-Item -Recurse -Force $ArtifactsDir | Out-Null
+# Clean
+& $dotnetExe msbuild build\build.proj /t:Clean
 
-# Git commit
-$commitHash = git rev-parse HEAD | Out-String
-$commitHash = $commitHash.Trim()
-$gitBranch = git rev-parse --abbrev-ref HEAD | Out-String
-$gitBranch = $gitBranch.Trim()
+if (-not $?)
+{
+    Write-Host "Clean failed!"
+    exit 1
+}
 
-# Restore project.json files
-& $dotnetExe restore (Join-Path $RepoRoot "$PackageId.sln")
+# Restore
+& $dotnetExe msbuild build\build.proj /t:Restore
 
 if (-not $?)
 {
@@ -43,7 +38,21 @@ if (-not $?)
     exit 1
 }
 
-& $dotnetExe build (Join-Path $RepoRoot "$PackageId.sln") --configuration release /m
+# Build, Pack, Test
+$buildArgs = , "msbuild"
+$buildArgs += "build\build.proj"
+
+if ($SkipTests)
+{
+    $buildArgs += "/p:SkipTest=true"
+}
+
+if ($SkipPack)
+{
+    $buildArgs += "/p:SkipPack=true"
+}
+
+& $dotnetExe $buildArgs
 
 if (-not $?)
 {
@@ -51,47 +60,9 @@ if (-not $?)
     exit 1
 }
 
-# Run tests
-if (-not $SkipTests)
-{
-    Run-Tests $RepoRoot $DotnetExe
-}
-
-if (-not $SkipPack)
-{
-    # Pack
-    & $dotnetExe pack (Join-Path $RepoRoot "src\$PackageId\$PackageId.csproj") --no-build --configuration release --output $ArtifactsDir /p:NoPackageAnalysis=true
-
-    if (-not $?)
-    {
-       Write-Host "Pack failed!"
-       exit 1
-    }
-
-    $buildNumber = Get-BuildNumber $BuildNumberDateBase
-
-    # Get version number
-    $nupkgVersion = (& $nupkgWrenchExe version $ArtifactsDir\$PackageId.*.nupkg --exclude-symbols --id $PackageId) | Out-String
-    $nupkgVersion = $nupkgVersion.Trim()
-
-    if (-not $StableVersion)
-    {
-        $nupkgVersion = $nupkgVersion + "-" + "beta.$buildNumber"
-    }
-
-    $updatedVersion = $nupkgVersion + "+git." + $commitHash
-
-    & $nupkgWrenchExe nuspec edit --property version --value $updatedVersion $ArtifactsDir --id $PackageId
-    & $nupkgWrenchExe updatefilename $ArtifactsDir --id $PackageId
-
-    Write-Host "-----------------------------"
-    Write-Host "Version: $updatedVersion"
-    Write-Host "-----------------------------"
-}
-
 $SleetConfig = Get-SleetConfig $RepoRoot
 
-if ($Push -and (Test-Path $SleetConfig) -and ($gitBranch -eq "master"))
+if ($Push -and (Test-Path $SleetConfig))
 {
     & $sleetExe push --source $SleetFeedId --config $SleetConfig $ArtifactsDir
 
