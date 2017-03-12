@@ -22,7 +22,7 @@
 
   <!-- Version -->
   <PropertyGroup>
-    <BuildNumber Condition=" '$(BuildNumber)' == '' ">$([System.DateTime]::Now.Year).$([System.DateTime]::Now.Month).$([System.DateTime]::Now.Day).$([System.DateTime]::Now.Hour).$([System.DateTime]::Now.Minute)</BuildNumber>
+    <BuildNumber Condition=" '$(BuildNumber)' == '' ">$([System.DateTime]::UtcNow.Year).$([System.DateTime]::UtcNow.Month).$([System.DateTime]::UtcNow.Day).$([System.DateTime]::UtcNow.Hour).$([System.DateTime]::UtcNow.Minute)</BuildNumber>
     <Version>$(StableVersion)</Version>
     <Version Condition=" '$(ReleaseLabel)' != '' ">$(StableVersion)-$(ReleaseLabel).$(BuildNumber)</Version>
   </PropertyGroup>
