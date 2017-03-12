@@ -40,6 +40,11 @@ namespace NuGet.Test.Helpers
             };
         }
 
+        public TestNupkg(TestNuspec nuspec)
+        {
+            Nuspec = nuspec ?? throw new ArgumentNullException(nameof(nuspec));
+        }
+
         public void AddFile(string path, byte[] bytes)
         {
             Files.Add(new TestNupkgFile(path, bytes));
@@ -88,7 +93,16 @@ namespace NuGet.Test.Helpers
             var id = Nuspec.Id;
             var version = Nuspec.Version;
 
-            var nupkgFile = new FileInfo(Path.Combine(outputDir, $"{id}.{version}.nupkg"));
+            var fileName = $"{id}.{version}";
+
+            if (Nuspec.IsSymbolPackage)
+            {
+                fileName += ".symbols";
+            }
+
+            fileName += ".nupkg";
+
+            var nupkgFile = new FileInfo(Path.Combine(outputDir, fileName));
 
             if (nupkgFile.Exists)
             {
@@ -142,6 +156,11 @@ namespace NuGet.Test.Helpers
         public static TestNupkg Create(string id, string version)
         {
             return new TestNupkg(id, version);
+        }
+
+        public static TestNupkg Create(TestNuspec nuspec)
+        {
+            return new TestNupkg(nuspec);
         }
 
         public override string ToString()

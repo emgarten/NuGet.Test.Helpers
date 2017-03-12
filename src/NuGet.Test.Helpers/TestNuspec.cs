@@ -8,6 +8,9 @@ using NuGet.Versioning;
 
 namespace NuGet.Test.Helpers
 {
+    /// <summary>
+    /// Represents a nuspec file.
+    /// </summary>
     public class TestNuspec
     {
         public string Id { get; set; } = "a";
@@ -27,10 +30,24 @@ namespace NuGet.Test.Helpers
         public string RequireLicenseAcceptance { get; set; }
         public string Tags { get; set; }
         public string DevelopmentDependency { get; set; }
+        public string Serviceable { get; set; }
+        public bool IsSymbolPackage { get; set; }
+        public List<string> PackageTypes { get; set; } = new List<string>();
         public List<PackageDependencyGroup> Dependencies { get; set; } = new List<PackageDependencyGroup>();
         public List<KeyValuePair<string, List<NuGetFramework>>> FrameworkAssemblies { get; set; } = new List<KeyValuePair<string, List<NuGetFramework>>>();
         public List<ContentFilesEntry> ContentFiles { get; set; } = new List<ContentFilesEntry>();
 
+        /// <summary>
+        /// Create a nupkg from this nuspec.
+        /// </summary>
+        public TestNupkg CreateNupkg()
+        {
+            return TestNupkg.Create(this);
+        }
+
+        /// <summary>
+        /// Create the nuspec XML.
+        /// </summary>
         public XDocument Create()
         {
             var doc = new XDocument(new XDeclaration("1.0", "utf-8", "no"));
@@ -61,6 +78,13 @@ namespace NuGet.Test.Helpers
             AddIfExists(metadata, "requireLicenseAcceptance", RequireLicenseAcceptance);
             AddIfExists(metadata, "tags", Tags);
             AddIfExists(metadata, "developmentDependency", DevelopmentDependency);
+            AddIfExists(metadata, "serviceable", Serviceable);
+
+            if (PackageTypes.Any())
+            {
+                metadata.Add(new XElement(XName.Get("packageTypes"),
+                    PackageTypes.Select(s => new XElement(XName.Get("packageType"), new XAttribute(XName.Get("name"), s)))));
+            }
 
             if (Dependencies.Any())
             {

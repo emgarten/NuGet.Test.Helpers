@@ -25,7 +25,7 @@ $sleetExe = Join-Path $RepoRoot "packages\Sleet.1.1.0-beta.296\tools\Sleet.exe"
 
 if (-not $?)
 {
-    Write-Host "Clean failed!"
+    Write-Error "Clean failed!"
     exit 1
 }
 
@@ -34,7 +34,7 @@ if (-not $?)
 
 if (-not $?)
 {
-    Write-Host "Restore failed!"
+    Write-Error "Restore failed!"
     exit 1
 }
 
@@ -56,7 +56,7 @@ if ($SkipPack)
 
 if (-not $?)
 {
-    Write-Host "Build failed!"
+    Write-Error "Build failed!"
     exit 1
 }
 
