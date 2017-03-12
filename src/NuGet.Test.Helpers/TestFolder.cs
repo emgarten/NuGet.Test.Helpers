@@ -11,13 +11,7 @@ namespace NuGet.Test.Helpers
         // The actual root
         private readonly DirectoryInfo _parent;
 
-        public string Root
-        {
-            get
-            {
-                return RootDirectory.FullName;
-            }
-        }
+        public string Root => RootDirectory.FullName;
 
         /// <summary>
         /// Delete the directory after completion.

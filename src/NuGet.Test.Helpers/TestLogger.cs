@@ -5,6 +5,9 @@ using NuGet.Common;
 
 namespace NuGet.Test.Helpers
 {
+    /// <summary>
+    /// NuGet ILogger that stores messages in memory.
+    /// </summary>
     public class TestLogger : ILogger
     {
         public ConcurrentQueue<LogEntry> Messages { get; } = new ConcurrentQueue<LogEntry>();

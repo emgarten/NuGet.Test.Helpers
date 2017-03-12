@@ -18,7 +18,7 @@ Install-PackagesConfig $RepoRoot
 
 $ArtifactsDir = Join-Path $RepoRoot 'artifacts'
 $dotnetExe = Get-DotnetCLIExe $RepoRoot
-$sleetExe = Join-Path $RepoRoot "packages\Sleet.1.1.0-beta.296\tools\Sleet.exe"
+$sleetExe = Join-Path $RepoRoot "packages\Sleet.2.0.0-beta.2017.3.12.4.50\tools\Sleet.exe"
 
 # Clean
 & $dotnetExe msbuild build\build.proj /t:Clean
@@ -60,23 +60,21 @@ if (-not $?)
     exit 1
 }
 
-$SleetConfig = Get-SleetConfig $RepoRoot
-
-if ($Push -and (Test-Path $SleetConfig))
+if ($Push)
 {
-    & $sleetExe push --source $SleetFeedId --config $SleetConfig $ArtifactsDir
+    & $sleetExe push --source $SleetFeedId $ArtifactsDir
 
     if (-not $?)
     {
-       Write-Host "Push failed!"
+       Write-Error "Push failed!"
        exit 1
     }
 
-    & $sleetExe validate --source $SleetFeedId --config $SleetConfig
+    & $sleetExe validate --source $SleetFeedId
 
     if (-not $?)
     {
-       Write-Host "Feed corrupt!"
+       Write-Error "Feed corrupt!"
        exit 1
     }
 }

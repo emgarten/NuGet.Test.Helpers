@@ -2,6 +2,9 @@
 
 namespace NuGet.Test.Helpers
 {
+    /// <summary>
+    /// File inside a nupkg.
+    /// </summary>
     public class TestNupkgFile
     {
         /// <summary>
