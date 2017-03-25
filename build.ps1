@@ -1,35 +1,28 @@
 param (
     [switch]$SkipTests,
-    [switch]$SkipPack,
-    [switch]$Push
+    [switch]$SkipPack
 )
 
+$RepoName = "NuGet.Test.Helpers"
 $RepoRoot = $PSScriptRoot
-$SleetFeedId = "packages"
+
 
 # Load common build script helper methods
 . "$PSScriptRoot\build\common\common.ps1"
+
+# Remove artifacts
+Remove-Artifacts $RepoRoot
 
 # Ensure dotnet.exe exists in .cli
 Install-DotnetCLI $RepoRoot
 
 # Ensure packages.config packages
-Install-PackagesConfig $RepoRoot
+Install-NuGetExe $RepoRoot
 
-$ArtifactsDir = Join-Path $RepoRoot 'artifacts'
 $dotnetExe = Get-DotnetCLIExe $RepoRoot
-$sleetExe = Join-Path $RepoRoot "packages\Sleet.2.0.0-beta.2017.3.12.4.50\tools\Sleet.exe"
-
-# Clean
-& $dotnetExe msbuild build\build.proj /t:Clean
-
-if (-not $?)
-{
-    Write-Error "Clean failed!"
-    exit 1
-}
 
 # Restore
+Write-Host "msbuild build\build.proj /t:Restore"
 & $dotnetExe msbuild build\build.proj /t:Restore
 
 if (-not $?)
@@ -39,19 +32,24 @@ if (-not $?)
 }
 
 # Build, Pack, Test
+$buildTargets = "Build"
+
+if (-not $SkipTests)
+{
+    $buildTargets += ";Test"
+}
+
+if (-not $SkipPack)
+{
+    $buildTargets += ";Pack"
+}
+
 $buildArgs = , "msbuild"
 $buildArgs += "build\build.proj"
+$buildArgs += "/t:$buildTargets"
 
-if ($SkipTests)
-{
-    $buildArgs += "/p:SkipTest=true"
-}
-
-if ($SkipPack)
-{
-    $buildArgs += "/p:SkipPack=true"
-}
-
+# Run build.proj
+Write-Host $dotnetExe $buildArgs
 & $dotnetExe $buildArgs
 
 if (-not $?)
@@ -60,23 +58,7 @@ if (-not $?)
     exit 1
 }
 
-if ($Push)
-{
-    & $sleetExe push --source $SleetFeedId $ArtifactsDir
-
-    if (-not $?)
-    {
-       Write-Error "Push failed!"
-       exit 1
-    }
-
-    & $sleetExe validate --source $SleetFeedId
-
-    if (-not $?)
-    {
-       Write-Error "Feed corrupt!"
-       exit 1
-    }
-}
+# run additional CI steps if on the CI machine
+Start-CIBuild $RepoRoot $RepoName 
 
 Write-Host "Success!"

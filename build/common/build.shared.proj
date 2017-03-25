@@ -1,0 +1,190 @@
+﻿<Project ToolsVersion="15.0" DefaultTargets="Run">
+  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), 'README.md'))\build\config.props" />
+  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), 'README.md'))\build\common\common.shared.props" />
+
+  <!-- Configuration/global properties -->
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <CommonMSBuildProperties>Configuration=$(Configuration)</CommonMSBuildProperties>
+  </PropertyGroup>
+
+  <!-- Find all projects in the repository  -->
+  <ItemGroup>
+    <SolutionProjects Include="$(RepositoryRootDirectory)src\**\*.csproj" />
+    <SolutionProjects Include="$(RepositoryRootDirectory)test\**\*.csproj" />
+  </ItemGroup>
+
+  <!--
+    ============================================================
+    Run full build.
+    ============================================================
+  -->
+  <Target Name="Run" DependsOnTargets="Build;Test;Pack">
+  </Target>
+
+  <!--
+    ============================================================
+    Build solution.
+    ============================================================
+  -->
+  <Target Name="Build" Condition=" '$(SkipBuild)' != 'true' ">
+    <Message Text="Building $(SolutionFile)" Importance="high" />
+
+    <MSBuild BuildInParallel="true"
+             Projects="$(SolutionFile)"
+             Targets="Build"
+             Properties="$(CommonMSBuildProperties)" />
+  </Target>
+
+  <!--
+    ============================================================
+    Restore solution.
+    ============================================================
+  -->
+  <Target Name="Restore" Condition=" '$(SkipRestore)' != 'true' " DependsOnTargets="RestorePackagesConfig">
+    <Message Text="Restoring projects" Importance="high" />
+
+    <MSBuild BuildInParallel="true"
+             Projects="$(SolutionFile)"
+             Targets="Restore"
+             Properties="$(CommonMSBuildProperties)" />
+  </Target>
+
+  <!--
+    ============================================================
+    Delete the root\artifacts directory
+    ============================================================
+  -->
+  <Target Name="Clean" Condition=" '$(SkipClean)' != 'true' ">
+    <Message Text="Cleaning $(ArtifactsDirectory)" Importance="high" />
+
+    <!-- Delete the entire artifacts dir -->
+    <RemoveDir Directories="$(ArtifactsDirectory)" />
+
+    <!-- Clean projects -->
+    <MSBuild BuildInParallel="true"
+         Projects="@(SolutionProjects)"
+         Targets="Clean"
+         Properties="$(CommonMSBuildProperties)" />
+  </Target>
+
+  <!--
+    ============================================================
+    Test all projects in the solution.
+    ============================================================
+  -->
+  <Target Name="Test" Condition=" '$(SkipTest)' != 'true' ">
+    <!-- Test inputs -->
+    <PropertyGroup>
+      <TestProjectPaths>@(SolutionProjects)</TestProjectPaths>
+      <TestResultsFileName>tests</TestResultsFileName>
+    </PropertyGroup>
+
+    <!-- Run tests as a batch -->
+    <MSBuild
+        Projects="$(MSBuildThisFileFullPath)"
+        Targets="RunTestsOnProjects"
+        Properties="$(CommonMSBuildProperties);
+                    TestResultsFileName=$(TestResultsFileName);
+                    TestProjectPaths=$(TestProjectPaths)">
+      <Output TaskParameter="TargetOutputs"
+              ItemName="TestAssemblyPath" />
+    </MSBuild>
+  </Target>
+
+  <!--
+    ============================================================
+    Pack projects
+    ============================================================
+  -->
+  <Target Name="Pack">
+    <Message Text="Packing for VS15" Importance="high" />
+
+    <MSBuild BuildInParallel="true"
+             Projects="@(SolutionProjects)"
+             Targets="PackProjects"
+             Properties="$(CommonMSBuildProperties);" />
+  </Target>
+
+  <!--
+    ============================================================
+    Run tests on all test projects
+    ============================================================
+  -->
+  <Target Name="RunTestsOnProjects">
+    <Message Text="Running $(TestResultsFileName)" Importance="high" />
+
+    <ItemGroup>
+      <TestProjectToSearch Include="$(TestProjectPaths)" />
+    </ItemGroup>
+
+    <MSBuild
+            Projects="@(TestProjectToSearch)"
+            Targets="GetTestAssemblies"
+            Properties="$(CommonMSBuildProperties);"
+            Condition=" '$(TestProjectPaths)' != '' ">
+      <Output TaskParameter="TargetOutputs"
+              ItemName="TestAssemblyPath" />
+    </MSBuild>
+
+    <PropertyGroup>
+      <TestResultsDirectory>$(ArtifactsDirectory)TestResults\</TestResultsDirectory>
+    </PropertyGroup>
+
+    <!-- Ensure the test results dir exists -->
+    <MakeDir Directories="$(TestResultsDirectory)" />
+
+    <PropertyGroup>
+      <!-- Sort assemblies -->
+      <DesktopInputTestAssemblies>@(TestAssemblyPath->WithMetadataValue("IsDesktop", "true"))</DesktopInputTestAssemblies>
+      <DesktopInputTestAssembliesSpaced>$(DesktopInputTestAssemblies.Replace(';', ' '))</DesktopInputTestAssembliesSpaced>
+      <CoreInputTestAssemblies>@(TestAssemblyPath->WithMetadataValue("IsCore", "true"))</CoreInputTestAssemblies>
+      <CoreInputTestAssembliesSpaced>$(CoreInputTestAssemblies.Replace(';', ' '))</CoreInputTestAssembliesSpaced>
+
+      <!-- Build exe commands -->
+      <TestResultsHtml Condition=" '$(TestResultsFileName)' != '' ">$(TestResultsDirectory)$(TestResultsFileName).html</TestResultsHtml>
+      <VSTestCommand>$(DotnetExePath) vstest $(CoreInputTestAssembliesSpaced)</VSTestCommand>
+      <DesktopTestCommand>$(XunitConoleExePath) $(DesktopInputTestAssembliesSpaced)</DesktopTestCommand>
+      <DesktopTestCommand Condition=" '$(TestResultsHtml)' != '' ">$(DesktopTestCommand) -html $(TestResultsHtml)</DesktopTestCommand>
+    </PropertyGroup>
+
+    <!-- Desktop -->
+    <Exec Command="$(DesktopTestCommand)"
+          ContinueOnError="true"
+          Condition=" '$(DesktopInputTestAssemblies)' != '' AND '$(SkipDesktopTests)' != 'true' ">
+      <Output TaskParameter="ExitCode" PropertyName="DesktopTestErrorCode"/>
+    </Exec>
+
+    <!-- VSTest/NETCore -->
+    <Exec Command="$(VSTestCommand)"
+          ContinueOnError="true"
+          Condition=" '$(CoreInputTestAssemblies)' != '' AND '$(SkipCoreTests)' != 'true' ">
+      <Output TaskParameter="ExitCode" PropertyName="VSTestErrorCode"/>
+    </Exec>
+
+    <Error Text="NETFramework $(TestResultsFileName) tests failed! Results: $(TestResultsHtml)" Condition=" '$(DesktopTestErrorCode)' != '0' AND '$(DesktopTestErrorCode)' != '' " />
+    <Error Text="NETCoreApp $(TestResultsFileName) tests failed!" Condition=" '$(VSTestErrorCode)' != '0' AND '$(VSTestErrorCode)' != '' " />
+
+    <Message Text="NETFramework $(TestResultsFileName) tests passed!" Condition=" '$(DesktopTestErrorCode)' == '0' " />
+    <Message Text="NETCoreApp $(TestResultsFileName) tests passed!" Condition=" '$(VSTestErrorCode)' == '0' " />
+  </Target>
+
+  <!--
+    ============================================================
+    Restore packages.config
+    ============================================================
+  -->
+  <Target Name="RestorePackagesConfig" Condition=" '$(XPlat)' != 'true' AND Exists($(NuGetExePath)) ">
+    <PropertyGroup>
+      <CommonPackagesConfig>$(BuildCommonDirectory)packages.common.config</CommonPackagesConfig>
+      <RepoPackagesConfig>$(RepositoryBuildDirectory)packages.config</RepoPackagesConfig>
+      <CICommonPackagesConfig>$(CIRootDirectory)common\packages.common.config</CICommonPackagesConfig>
+      <CIPackagesConfig>$(CIRootDirectory)common\packages.config</CIPackagesConfig>
+    </PropertyGroup>
+    
+    <Exec Command="$(NuGetExePath) restore $(CommonPackagesConfig) -PackagesDirectory $(PackagesConfigDirectory)" Condition="Exists($(CommonPackagesConfig))" />
+    <Exec Command="$(NuGetExePath) restore $(RepoPackagesConfig) -PackagesDirectory $(PackagesConfigDirectory)" Condition="Exists($(RepoPackagesConfig))" />
+    <Exec Command="$(NuGetExePath) restore $(CICommonPackagesConfig) -PackagesDirectory $(PackagesConfigDirectory)" Condition="Exists($(CICommonPackagesConfig))" />
+    <Exec Command="$(NuGetExePath) restore $(CIPackagesConfig) -PackagesDirectory $(PackagesConfigDirectory)" Condition="Exists($(CIPackagesConfig))" />
+  </Target>
+</Project>

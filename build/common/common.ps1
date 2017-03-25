@@ -59,78 +59,54 @@ Function Get-NuGetExePath {
     return Join-Path $RepositoryRootDir ".nuget/nuget.exe"
 }
 
-# restore packages.config
-Function Install-PackagesConfig {
+# download .nuget\nuget.exe
+Function Install-NuGetExe {
     param(
         [string]$RepositoryRootDir
     )
 
-    Write-Host "Restoring packages.config"
-
+    Write-Host "Downloading nuget.exe"
     $nugetExe = Get-NuGetExePath $RepositoryRootDir
-    $packagesConfig = Join-Path $RepositoryRootDir ".nuget/packages.config"
 
     if (-not (Test-Path $nugetExe))
     {
         wget https://dist.nuget.org/win-x86-commandline/v4.0.0/NuGet.exe -OutFile $nugetExe
     }
-
-    & $nugetExe restore $packagesConfig -SolutionDirectory $RepositoryRootDir
 }
 
-Function Get-BuildNumber([string]$inputDate) {
-    [int](((Get-Date) - (Get-Date $inputDate)).TotalMinutes / 5)
+# Run CI specific scripts
+Function Start-CIBuild {
+    param(
+        [string]$RepositoryRootDir,
+        [string]$RepositoryName
+    )
+
+    $repoSpecificDir = Join-Path $RepositoryRootDir $RepositoryName
+    $defaultDir = Join-Path $RepositoryRootDir "default"
+
+    $repoSpecificScript = Join-Path $repoSpecificDir "build.ps1"
+    $defaultScript = Join-Path $defaultDir "build.ps1"
+
+    if (Test-Path $repoSpecificScript)
+    {
+        Invoke-Expression $repoSpecificScript
+    }
+    elseif (Test-Path $defaultScript)
+    {
+        Invoke-Expression $defaultScript
+    }
 }
 
-Function Get-SleetConfig {
+# Delete the artifacts directory
+Function Remove-Artifacts {
     param(
         [string]$RepositoryRootDir
     )
 
-    $path = Join-Path $RepositoryRootDir "sleet.json"
+    $artifactsDir = Join-Path $RepositoryRootDir "artifacts"
 
-    if (-not (Test-Path $path))
+    if (Test-Path $artifactsDir)
     {
-        $parentPath =(get-item $RepositoryRootDir ).parent.FullName
-
-        $path = Join-Path $parentPath "sleet.json"
-    }
-
-    if (-not (Test-Path $path))
-    {
-        $path = "sleet.json"
-    }
-
-    return $path
-}
-
-# Tests
-Function Run-Tests {
-    param(
-        [string]$RepoRoot,
-        [string]$DotnetExe
-    )
-
-    Write-Host "Running Tests"
-
-    $failed = $false
-
-    Get-ChildItem (Join-Path $RepoRoot "test") -Filter *.csproj -Recurse | 
-    Foreach-Object {
-        $testProject = $_.FullName
-        Write-Host $testProject
-
-        & $dotnetExe test $testProject -c release --no-build
-
-        if (-not $?)
-        {
-            Write-Host "$testProject FAILED!!!"
-            $failed = $true
-        }
-    }
-
-    if ($failed -eq $true)
-    {
-        exit 1
+        Remove-Item $artifactsDir -Force -Recurse
     }
 }

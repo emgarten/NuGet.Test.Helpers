@@ -5,6 +5,21 @@
     <IsXPlat Condition=" $(MSBuildProjectFullPath.StartsWith('/')) == 'true' OR $(MSBuildProjectFullPath.StartsWith('\')) == 'true' ">true</IsXPlat>
   </PropertyGroup>
 
+  <!-- Common -->
+  <PropertyGroup>
+    <RepositoryRootDirectory>$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), 'README.md'))\</RepositoryRootDirectory>
+    <RepositoryBuildDirectory>$(RepositoryRootDirectory)build\</RepositoryBuildDirectory>
+    <BuildCommonDirectory>$(RepositoryRootDirectory)build\common\</BuildCommonDirectory>
+    <SolutionFile>$(RepositoryRootDirectory)$(RepositoryName).sln</SolutionFile>
+    <ArtifactsDirectory>$(RepositoryRootDirectory)artifacts\</ArtifactsDirectory>
+    <DotnetExePath>$(RepositoryRootDirectory).cli\dotnet.exe</DotnetExePath>
+    <TestResultsDirectory>$(ArtifactsDirectory)TestResults\</TestResultsDirectory>
+    <NuGetExePath>$(RepositoryRootDirectory).nuget\nuget.exe</NuGetExePath>
+    <NuGetExeUrl>https://dist.nuget.org/win-x86-commandline/v4.0.0/NuGet.exe</NuGetExeUrl>
+    <PackagesConfigDirectory>$(RepositoryRootDirectory).nuget\packages</PackagesConfigDirectory>
+    <CIRootDirectory>$(RepositoryRootDirectory).ci\</CIRootDirectory>
+  </PropertyGroup>
+
   <!-- Properties -->
   <PropertyGroup>
     <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
@@ -23,4 +38,13 @@
     <BaseOutputPath>$(ArtifactsDirectory)proj\$(MSBuildProjectName)\bin\</BaseOutputPath>
     <OutputPath>$(BaseOutputPath)$(Configuration)\</OutputPath>
   </PropertyGroup>
+
+  <!-- Import .ci build specific props if needed -->
+  <PropertyGroup>
+    <CICommonProps>$(CIRootDirectory)common\common.props</CICommonProps>
+    <CIRepoProps>$(CIRootDirectory)$(RepositoryName)\common.props</CIRepoProps>
+  </PropertyGroup>
+
+  <Import Project="$(CICommonProps)" Condition="Exists($(CICommonProps))" />
+  <Import Project="$(CIRepoProps)" Condition="Exists($(CIRepoProps))" />
 </Project>
