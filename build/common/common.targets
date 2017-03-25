@@ -1,4 +1,14 @@
 ﻿<Project ToolsVersion="15.0">
+  <!-- Compiler flags -->
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net46' ">
+    <DefineConstants>$(DefineConstants);IS_DESKTOP</DefineConstants>
+    <IsDesktop>true</IsDesktop>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'netcoreapp1.0' OR '$(TargetFramework)' == 'netstandard1.3' ">
+    <DefineConstants>$(DefineConstants);IS_CORECLR</DefineConstants>
+    <IsCore>true</IsCore>
+  </PropertyGroup>
+
   <!-- Symbols -->
   <ItemGroup Condition=" '$(PackProject)' == 'true' AND '$(SkipSourceLink)' != 'true' ">
     <PackageReference Include="SourceLink.Create.GitHub" Version="2.0.2" PrivateAssets="all" />
@@ -53,21 +63,129 @@
 
   <!--
     ============================================================
-    TestProject
-    Runs tests on the current project if it is a test project.
+    PackProjects
     ============================================================
   -->
-  <Target Name="TestProject" Condition=" '$(TestProject)' == 'true' " DependsOnTargets="VSTest">
-    <Message Text="Tested project $(MSBuildProjectName)" Importance="high"  />
+  <Target Name="PackProjects" Condition=" '$(PackProject)' == 'true' ">
+    <Message Text="Packing $(ProjectName)" Importance="high" />
+
+    <!-- Run pack on the project -->
+    <MSBuild
+      Projects="$(MSBuildProjectFullPath)"
+      Targets="Pack"
+      Properties="Configuration=$(Configuration);
+                  VisualStudioVersion=$(VisualStudioVersion);
+                  PackageOutputPath=$(NupkgOutputDirectory);
+                  NoPackageAnalysis=true;
+                  IncludeSymbols=true;
+                  IsPackable=true;
+                  GenerateDocsForPack=true">
+    </MSBuild>
   </Target>
 
   <!--
     ============================================================
-    PackProject
-    Packs the current project if it is marked as a pack project.
+    RunTests for the current project
+    Top level entry point for tests
     ============================================================
   -->
-  <Target Name="PackProject" Condition=" '$(PackProject)' == 'true' " DependsOnTargets="Pack">
-    <Message Text="Packed project $(MSBuildProjectName)" Importance="high"  />
+  <Target Name="RunTests"
+          DependsOnTargets="Build;GetTargetFrameworkSet"
+          Condition=" '$(TestProject)' == 'true' AND '$(SkipTests)' != 'true' ">
+    <Message Text="Running tests for $(ProjectName)" Importance="high" />
+
+    <!-- Execute tests for each framework -->
+    <MSBuild
+      Projects="$(MSBuildProjectFullPath)"
+      Targets="RunTestsInner"
+      Properties="TargetFramework=%(ProjectTargetFrameworkEntries.Identity);
+                  Configuration=$(Configuration);
+                  VisualStudioVersion=$(VisualStudioVersion);">
+    </MSBuild>
+  </Target>
+
+  <!--
+    ============================================================
+    RunTests for the current framework
+    Called by RunTests, this calls XUnit
+    ============================================================
+  -->
+  <Target Name="RunTestsInner">
+    <PropertyGroup>
+      <TestAssemblyPath>$(OutputPath)$(AssemblyName).exe</TestAssemblyPath>
+    </PropertyGroup>
+    <Message Text="Running tests on $(TestAssemblyPath)" Importance="high" />
+
+    <!-- Ensure the test results dir exists -->
+    <MakeDir Directories="$(TestResultsDirectory)"
+      Condition=" '$(IsDesktop)' == 'true' AND '$(SkipDesktopTests)' != 'true' " />
+
+    <!-- For desktop frameworks use the console runner -->
+    <Exec Command="$(XunitConoleExePath) $(TestAssemblyPath) -html $(TestResultsDirectory)$(ProjectName).VS$(VisualStudioVersion).html"
+          Condition=" '$(IsDesktop)' == 'true' AND '$(SkipDesktopTests)' != 'true' " />
+
+    <!-- For other frameworks call dotnet test -->
+    <Exec Command="$(DotnetExePath) test -f $(TargetFramework) --no-build -c $(Configuration)"
+          Condition=" '$(IsDesktop)' != 'true' AND '$(SkipCoreTests)' != 'true' " />
+  </Target>
+
+  <!--
+    ============================================================
+    GetTestAssemblies
+    ============================================================
+  -->
+  <Target Name="GetTestAssemblies"
+          DependsOnTargets="Build;GetTargetFrameworkSet"
+          Condition=" '$(TestProject)' == 'true' AND '$(SkipTests)' != 'true' "
+          Returns="@(TestAssemblyPath)">
+    <Message Text="Discovering test assemblies for $(AssemblyName)" Importance="high" />
+
+    <!-- Execute find for all frameworks -->
+    <MSBuild
+      Projects="$(MSBuildProjectFullPath)"
+      Targets="GetTestAssembliesInner"
+      Properties="TargetFramework=%(ProjectTargetFrameworkEntries.Identity);
+                  Configuration=$(Configuration);
+                  VisualStudioVersion=$(VisualStudioVersion);">
+      <Output TaskParameter="TargetOutputs"
+              ItemName="TestAssemblyPath" />
+    </MSBuild>
+  </Target>
+
+  <!--
+    ============================================================
+    GetTestAssembliesInner
+    ============================================================
+  -->
+  <Target Name="GetTestAssembliesInner"
+          Returns="@(TestAssemblyPath)">
+
+    <PropertyGroup>
+      <TestAssemblyRelativePath Condition=" '$(IsDesktop)' == 'true' ">$(OutputPath)$(AssemblyName).exe</TestAssemblyRelativePath>
+      <TestAssemblyRelativePath Condition=" '$(IsDesktop)' != 'true' ">$(OutputPath)$(AssemblyName).dll</TestAssemblyRelativePath>
+    </PropertyGroup>
+
+    <ConvertToAbsolutePath Paths="$(TestAssemblyRelativePath)">
+      <Output TaskParameter="AbsolutePaths" PropertyName="AbsoluteTestAssemblyPath"/>
+    </ConvertToAbsolutePath>
+
+    <ItemGroup>
+      <TestAssemblyPath Include="$(AbsoluteTestAssemblyPath)">
+        <IsDesktop Condition=" '$(IsDesktop)' == 'true' ">true</IsDesktop>
+        <IsCore Condition=" '$(IsDesktop)' != 'true' ">true</IsCore>
+      </TestAssemblyPath>
+    </ItemGroup>
+  </Target>
+
+  <!--
+    ============================================================
+    GetTargetFrameworkSet get all target frameworks
+    ============================================================
+  -->
+  <Target Name="GetTargetFrameworkSet" Returns="@(ProjectTargetFrameworkEntries)">
+    <!-- Find all frameworks to run on -->
+    <ItemGroup>
+      <ProjectTargetFrameworkEntries Include="$(TargetFramework);$(TargetFrameworks)" />
+    </ItemGroup>
   </Target>
 </Project>

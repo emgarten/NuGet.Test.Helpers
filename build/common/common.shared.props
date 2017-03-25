@@ -16,14 +16,6 @@
     <ComVisible>false</ComVisible>
   </PropertyGroup>
 
-  <!-- Compiler flags -->
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'net46' ">
-    <DefineConstants>$(DefineConstants);IS_DESKTOP</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'netcoreapp1.0' OR '$(TargetFramework)' == 'netstandard1.3' ">
-    <DefineConstants>$(DefineConstants);IS_CORECLR</DefineConstants>
-  </PropertyGroup>
-
   <!-- output paths -->
   <PropertyGroup>
     <BaseIntermediateOutputPath>$(ArtifactsDirectory)proj\$(MSBuildProjectName)\obj\</BaseIntermediateOutputPath>

@@ -9,8 +9,8 @@
 
   <!-- Find all projects in the repository  -->
   <ItemGroup>
-    <RepoProjects Include="$(RepositoryRootDirectory)src\**\*.csproj" />
-    <RepoProjects Include="$(RepositoryRootDirectory)test\**\*.csproj" />
+    <SolutionProjects Include="$(RepositoryRootDirectory)src\**\*.csproj" />
+    <SolutionProjects Include="$(RepositoryRootDirectory)test\**\*.csproj" />
   </ItemGroup>
 
   <!--
@@ -62,7 +62,7 @@
 
     <!-- Clean projects -->
     <MSBuild BuildInParallel="true"
-         Projects="@(RepoProjects)"
+         Projects="@(SolutionProjects)"
          Targets="Clean"
          Properties="$(CommonMSBuildProperties)" />
   </Target>
@@ -72,22 +72,101 @@
     Test all projects in the solution.
     ============================================================
   -->
-  <Target Name="Test" DependsOnTargets="Build" Condition=" '$(SkipTest)' != 'true' ">
-    <MSBuild BuildInParallel="false"
-             Projects="@(RepoProjects)"
-             Targets="TestProject"
-             Properties="$(CommonMSBuildProperties)" />
+  <Target Name="Test" Condition=" '$(SkipTest)' != 'true' ">
+    <!-- Test inputs -->
+    <PropertyGroup>
+      <TestProjectPaths>@(SolutionProjects)</TestProjectPaths>
+      <TestResultsFileName>tests</TestResultsFileName>
+    </PropertyGroup>
+
+    <!-- Run tests as a batch -->
+    <MSBuild
+        Projects="$(MSBuildThisFileFullPath)"
+        Targets="RunTestsOnProjects"
+        Properties="$(CommonMSBuildProperties);
+                    TestResultsFileName=$(TestResultsFileName);
+                    TestProjectPaths=$(TestProjectPaths)">
+      <Output TaskParameter="TargetOutputs"
+              ItemName="TestAssemblyPath" />
+    </MSBuild>
   </Target>
 
   <!--
     ============================================================
-    Pack all projects in the solution.
+    Pack projects
     ============================================================
   -->
-  <Target Name="Pack" DependsOnTargets="Build" Condition=" '$(SkipPack)' != 'true' ">
+  <Target Name="Pack">
+    <Message Text="Packing for VS15" Importance="high" />
+
     <MSBuild BuildInParallel="true"
-             Projects="@(RepoProjects)"
-             Targets="PackProject"
-             Properties="$(CommonMSBuildProperties)" />
+             Projects="@(SolutionProjects)"
+             Targets="PackProjects"
+             Properties="$(CommonMSBuildProperties);
+                         VisualStudioVersion=15.0;" />
+  </Target>
+
+  <!--
+    ============================================================
+    Run tests on all test projects
+    ============================================================
+  -->
+  <Target Name="RunTestsOnProjects">
+    <Message Text="Running $(TestResultsFileName)" Importance="high" />
+
+    <ItemGroup>
+      <TestProjectToSearch Include="$(TestProjectPaths)" />
+    </ItemGroup>
+
+    <MSBuild
+            Projects="@(TestProjectToSearch)"
+            Targets="GetTestAssemblies"
+            Properties="$(CommonMSBuildProperties);
+                         VisualStudioVersion=$(VisualStudioVersion);"
+            Condition=" '$(TestProjectPaths)' != '' ">
+      <Output TaskParameter="TargetOutputs"
+              ItemName="TestAssemblyPath" />
+    </MSBuild>
+
+    <PropertyGroup>
+      <TestResultsDirectory>$(ArtifactsDirectory)TestResults\</TestResultsDirectory>
+    </PropertyGroup>
+
+    <!-- Ensure the test results dir exists -->
+    <MakeDir Directories="$(TestResultsDirectory)" />
+
+    <PropertyGroup>
+      <!-- Sort assemblies -->
+      <DesktopInputTestAssemblies>@(TestAssemblyPath->WithMetadataValue("IsDesktop", "true"))</DesktopInputTestAssemblies>
+      <DesktopInputTestAssembliesSpaced>$(DesktopInputTestAssemblies.Replace(';', ' '))</DesktopInputTestAssembliesSpaced>
+      <CoreInputTestAssemblies>@(TestAssemblyPath->WithMetadataValue("IsCore", "true"))</CoreInputTestAssemblies>
+      <CoreInputTestAssembliesSpaced>$(CoreInputTestAssemblies.Replace(';', ' '))</CoreInputTestAssembliesSpaced>
+
+      <!-- Build exe commands -->
+      <TestResultsHtml Condition=" '$(TestResultsFileName)' != '' ">$(TestResultsDirectory)$(TestResultsFileName).html</TestResultsHtml>
+      <VSTestCommand>$(DotnetExePath) vstest $(CoreInputTestAssembliesSpaced)</VSTestCommand>
+      <DesktopTestCommand>$(XunitConoleExePath) $(DesktopInputTestAssembliesSpaced)</DesktopTestCommand>
+      <DesktopTestCommand Condition=" '$(TestResultsHtml)' != '' ">$(DesktopTestCommand) -html $(TestResultsHtml)</DesktopTestCommand>
+    </PropertyGroup>
+
+    <!-- Desktop -->
+    <Exec Command="$(DesktopTestCommand)"
+          ContinueOnError="true"
+          Condition=" '$(DesktopInputTestAssemblies)' != '' AND '$(SkipDesktopTests)' != 'true' ">
+      <Output TaskParameter="ExitCode" PropertyName="DesktopTestErrorCode"/>
+    </Exec>
+
+    <!-- VSTest/NETCore -->
+    <Exec Command="$(VSTestCommand)"
+          ContinueOnError="true"
+          Condition=" '$(CoreInputTestAssemblies)' != '' AND '$(SkipCoreTests)' != 'true' ">
+      <Output TaskParameter="ExitCode" PropertyName="VSTestErrorCode"/>
+    </Exec>
+
+    <Error Text="Desktop $(TestResultsFileName) tests failed! Results: $(TestResultsHtml)" Condition=" '$(DesktopTestErrorCode)' != '0' AND '$(DesktopTestErrorCode)' != '' " />
+    <Error Text="NETCore $(TestResultsFileName) tests failed!" Condition=" '$(VSTestErrorCode)' != '0' AND '$(VSTestErrorCode)' != '' " />
+
+    <Message Text="Desktop $(TestResultsFileName) tests passed!" Condition=" '$(DesktopTestErrorCode)' == '0' " />
+    <Message Text="NETCore $(TestResultsFileName) tests passed!" Condition=" '$(VSTestErrorCode)' == '0' " />
   </Target>
 </Project>
