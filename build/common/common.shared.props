@@ -25,7 +25,7 @@
   </PropertyGroup>
 
   <!-- output paths -->
-  <PropertyGroup Condition=" '$(TestProject)' != 'true' ">
+  <PropertyGroup>
     <BaseIntermediateOutputPath>$(ArtifactsDirectory)proj\$(MSBuildProjectName)\obj\</BaseIntermediateOutputPath>
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)$(Configuration)\</IntermediateOutputPath>
     <BaseOutputPath>$(ArtifactsDirectory)proj\$(MSBuildProjectName)\bin\</BaseOutputPath>

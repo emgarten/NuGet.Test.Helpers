@@ -3,8 +3,8 @@
 
   <!-- Configuration/global properties -->
   <PropertyGroup>
-    <CommonMSBuildProperties>Configuration=Release</CommonMSBuildProperties>
-    <CommonMSBuildProperties Condition=" '$(Configuration)' != '' ">Configuration=$(Configuration)</CommonMSBuildProperties>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <CommonMSBuildProperties>Configuration=$(Configuration)</CommonMSBuildProperties>
   </PropertyGroup>
 
   <!-- Find all projects in the repository  -->
@@ -18,7 +18,7 @@
     Run full build.
     ============================================================
   -->
-  <Target Name="Run" DependsOnTargets="Clean;Build;Test;Pack">
+  <Target Name="Run" DependsOnTargets="Build;Test;Pack">
   </Target>
 
   <!--
