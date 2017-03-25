@@ -22,10 +22,33 @@
 
   <!-- Version -->
   <PropertyGroup>
+    <ApplyBuildNumber Condition=" '$(ApplyBuildNumber)' == '' ">true</ApplyBuildNumber>
     <BuildNumber Condition=" '$(BuildNumber)' == '' ">$([System.DateTime]::UtcNow.Year).$([System.DateTime]::UtcNow.Month).$([System.DateTime]::UtcNow.Day).$([System.DateTime]::UtcNow.Hour).$([System.DateTime]::UtcNow.Minute)</BuildNumber>
     <Version>$(StableVersion)</Version>
-    <Version Condition=" '$(ReleaseLabel)' != '' ">$(StableVersion)-$(ReleaseLabel).$(BuildNumber)</Version>
+    <Version Condition=" '$(ReleaseLabel)' != '' ">$(Version)-$(ReleaseLabel)</Version>
+    <Version Condition=" '$(ReleaseLabel)' != '' AND '$(ApplyBuildNumber)' == 'true' ">$(Version).$(BuildNumber)</Version>
   </PropertyGroup>
+
+  <!-- Test projects -->
+  <PropertyGroup Condition=" '$(TestProject)' == 'true' ">
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup Condition=" '$(TestProject)' == 'true' ">
+    <None Include="$(BuildCommonDirectory)TestShared\xunit.runner.json">
+      <Link>xunit.runner.json</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(TestProject)' == 'true' ">
+    <PackageReference Include="FluentAssertions" Version="$(FluentAssertionsVersion)" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(TestSDKVersion)" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="$(XunitVersion)" />
+    <PackageReference Include="xunit" Version="$(XunitVersion)" />
+  </ItemGroup>
 
   <!--
     ============================================================

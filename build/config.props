@@ -8,6 +8,9 @@
   <!-- Dependency versions -->
   <PropertyGroup>
     <NuGetPackageVersion>4.0.0</NuGetPackageVersion>
+    <XunitVersion>2.2.0</XunitVersion>
+    <TestSDKVersion>15.0.0</TestSDKVersion>
+    <FluentAssertionsVersion>4.19.0</FluentAssertionsVersion>
   </PropertyGroup>
   
   <!-- Config -->
@@ -29,10 +32,11 @@
 
   <!-- Common -->
   <PropertyGroup>
-    <RepositoryRootDirectory>$(MSBuildThisFileDirectory)</RepositoryRootDirectory>
-    <BuildCommonDirectory>$(MSBuildThisFileDirectory)build\common</BuildCommonDirectory>
-    <SolutionFile>$(MSBuildThisFileDirectory)$(RepositoryName).sln</SolutionFile>
-    <ArtifactsDirectory>$(MSBuildThisFileDirectory)artifacts</ArtifactsDirectory>
-    <DotnetExePath>$(MSBuildThisFileDirectory).cli\dotnet.exe</DotnetExePath>
+    <RepositoryRootDirectory>$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), 'README.md'))\</RepositoryRootDirectory>
+    <BuildCommonDirectory>$(RepositoryRootDirectory)build\common</BuildCommonDirectory>
+    <SolutionFile>$(RepositoryRootDirectory)$(RepositoryName).sln</SolutionFile>
+    <ArtifactsDirectory>$(RepositoryRootDirectory)artifacts</ArtifactsDirectory>
+    <DotnetExePath>$(RepositoryRootDirectory).cli\dotnet.exe</DotnetExePath>
+    <TestResultsDirectory>$(ArtifactsDirectory)TestResults\</TestResultsDirectory>
   </PropertyGroup>
 </Project>
