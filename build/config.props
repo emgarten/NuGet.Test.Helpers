@@ -33,9 +33,9 @@
   <!-- Common -->
   <PropertyGroup>
     <RepositoryRootDirectory>$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), 'README.md'))\</RepositoryRootDirectory>
-    <BuildCommonDirectory>$(RepositoryRootDirectory)build\common</BuildCommonDirectory>
+    <BuildCommonDirectory>$(RepositoryRootDirectory)build\common\</BuildCommonDirectory>
     <SolutionFile>$(RepositoryRootDirectory)$(RepositoryName).sln</SolutionFile>
-    <ArtifactsDirectory>$(RepositoryRootDirectory)artifacts</ArtifactsDirectory>
+    <ArtifactsDirectory>$(RepositoryRootDirectory)artifacts\</ArtifactsDirectory>
     <DotnetExePath>$(RepositoryRootDirectory).cli\dotnet.exe</DotnetExePath>
     <TestResultsDirectory>$(ArtifactsDirectory)TestResults\</TestResultsDirectory>
   </PropertyGroup>

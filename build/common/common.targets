@@ -41,6 +41,7 @@
       <Link>xunit.runner.json</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Compile Include="$(BuildCommonDirectory)TestShared\*.cs" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TestProject)' == 'true' ">
