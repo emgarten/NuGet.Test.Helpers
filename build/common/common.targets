@@ -74,7 +74,6 @@
       Projects="$(MSBuildProjectFullPath)"
       Targets="Pack"
       Properties="Configuration=$(Configuration);
-                  VisualStudioVersion=$(VisualStudioVersion);
                   PackageOutputPath=$(NupkgOutputDirectory);
                   NoPackageAnalysis=true;
                   IncludeSymbols=true;
@@ -99,8 +98,7 @@
       Projects="$(MSBuildProjectFullPath)"
       Targets="RunTestsInner"
       Properties="TargetFramework=%(ProjectTargetFrameworkEntries.Identity);
-                  Configuration=$(Configuration);
-                  VisualStudioVersion=$(VisualStudioVersion);">
+                  Configuration=$(Configuration);">
     </MSBuild>
   </Target>
 
@@ -121,7 +119,7 @@
       Condition=" '$(IsDesktop)' == 'true' AND '$(SkipDesktopTests)' != 'true' " />
 
     <!-- For desktop frameworks use the console runner -->
-    <Exec Command="$(XunitConoleExePath) $(TestAssemblyPath) -html $(TestResultsDirectory)$(ProjectName).VS$(VisualStudioVersion).html"
+    <Exec Command="$(XunitConoleExePath) $(TestAssemblyPath) -html $(TestResultsDirectory)$(ProjectName).html"
           Condition=" '$(IsDesktop)' == 'true' AND '$(SkipDesktopTests)' != 'true' " />
 
     <!-- For other frameworks call dotnet test -->
@@ -145,8 +143,7 @@
       Projects="$(MSBuildProjectFullPath)"
       Targets="GetTestAssembliesInner"
       Properties="TargetFramework=%(ProjectTargetFrameworkEntries.Identity);
-                  Configuration=$(Configuration);
-                  VisualStudioVersion=$(VisualStudioVersion);">
+                  Configuration=$(Configuration);">
       <Output TaskParameter="TargetOutputs"
               ItemName="TestAssemblyPath" />
     </MSBuild>

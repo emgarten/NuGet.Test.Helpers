@@ -15,8 +15,7 @@
     <DotnetExePath>$(RepositoryRootDirectory).cli\dotnet.exe</DotnetExePath>
     <TestResultsDirectory>$(ArtifactsDirectory)TestResults\</TestResultsDirectory>
     <NuGetExePath>$(RepositoryRootDirectory).nuget\nuget.exe</NuGetExePath>
-    <NuGetExeUrl>https://dist.nuget.org/win-x86-commandline/v4.0.0/NuGet.exe</NuGetExeUrl>
-    <PackagesConfigDirectory>$(RepositoryRootDirectory).nuget\packages</PackagesConfigDirectory>
+    <PackagesConfigDirectory>$(RepositoryRootDirectory).nuget\packages\</PackagesConfigDirectory>
     <CIRootDirectory>$(RepositoryRootDirectory).ci\</CIRootDirectory>
   </PropertyGroup>
 
