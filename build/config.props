@@ -1,13 +1,11 @@
 ﻿<Project ToolsVersion="15.0">
-  <!-- Version -->
-  <PropertyGroup>
-    <StableVersion>1.0.0</StableVersion>
-    <ReleaseLabel>beta</ReleaseLabel>
-  </PropertyGroup>
-
   <!-- Dependency versions -->
   <PropertyGroup>
     <NuGetPackageVersion>4.0.0</NuGetPackageVersion>
+    <XunitVersion>2.2.0</XunitVersion>
+    <TestSDKVersion>15.0.0</TestSDKVersion>
+    <FluentAssertionsVersion>4.19.0</FluentAssertionsVersion>
+    <SourceLinkVersion>2.0.2</SourceLinkVersion>
   </PropertyGroup>
   
   <!-- Config -->
@@ -25,14 +23,5 @@
     <PackageTags>nuget</PackageTags>
     <Description>NuGet helpers for creating test nupkgs.</Description>
     <Copyright>Copyright © 2017 Justin Emgarten</Copyright>
-  </PropertyGroup>
-
-  <!-- Common -->
-  <PropertyGroup>
-    <RepositoryRootDirectory>$(MSBuildThisFileDirectory)</RepositoryRootDirectory>
-    <BuildCommonDirectory>$(MSBuildThisFileDirectory)build\common</BuildCommonDirectory>
-    <SolutionFile>$(MSBuildThisFileDirectory)$(RepositoryName).sln</SolutionFile>
-    <ArtifactsDirectory>$(MSBuildThisFileDirectory)artifacts</ArtifactsDirectory>
-    <DotnetExePath>$(MSBuildThisFileDirectory).cli\dotnet.exe</DotnetExePath>
   </PropertyGroup>
 </Project>
