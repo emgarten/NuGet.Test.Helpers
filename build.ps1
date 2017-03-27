@@ -1,82 +1,46 @@
 param (
     [switch]$SkipTests,
     [switch]$SkipPack,
-    [switch]$Push
+    [ValidateSet("Debug", "Release")]
+    [string]$Configuration = "Release"
 )
 
+$RepoName = "NuGet.Test.Helpers"
 $RepoRoot = $PSScriptRoot
-$SleetFeedId = "packages"
+pushd $RepoRoot
 
 # Load common build script helper methods
 . "$PSScriptRoot\build\common\common.ps1"
 
-# Ensure dotnet.exe exists in .cli
+# Download tools
 Install-DotnetCLI $RepoRoot
+Install-NuGetExe $RepoRoot
 
-# Ensure packages.config packages
-Install-PackagesConfig $RepoRoot
-
-$ArtifactsDir = Join-Path $RepoRoot 'artifacts'
-$dotnetExe = Get-DotnetCLIExe $RepoRoot
-$sleetExe = Join-Path $RepoRoot "packages\Sleet.2.0.0-beta.2017.3.12.4.50\tools\Sleet.exe"
-
-# Clean
-& $dotnetExe msbuild build\build.proj /t:Clean
-
-if (-not $?)
-{
-    Write-Error "Clean failed!"
-    exit 1
-}
+# Clean and write git info
+Remove-Artifacts $RepoRoot
+Invoke-DotnetMSBuild $RepoRoot ("build\build.proj", "/t:Clean;WriteGitInfo", "/p:Configuration=$Configuration")
 
 # Restore
-& $dotnetExe msbuild build\build.proj /t:Restore
+Invoke-DotnetMSBuild $RepoRoot ("build\build.proj", "/t:Restore", "/p:Configuration=$Configuration")
 
-if (-not $?)
+# Run main build
+$buildTargets = "Build"
+
+if (-not $SkipTests)
 {
-    Write-Error "Restore failed!"
-    exit 1
+    $buildTargets += ";Test"
 }
 
-# Build, Pack, Test
-$buildArgs = , "msbuild"
-$buildArgs += "build\build.proj"
-
-if ($SkipTests)
+if (-not $SkipPack)
 {
-    $buildArgs += "/p:SkipTest=true"
+    $buildTargets += ";Pack"
 }
 
-if ($SkipPack)
-{
-    $buildArgs += "/p:SkipPack=true"
-}
+# Run build.proj
+Invoke-DotnetMSBuild $RepoRoot ("build\build.proj", "/t:$buildTargets", "/p:Configuration=$Configuration")
 
-& $dotnetExe $buildArgs
-
-if (-not $?)
-{
-    Write-Error "Build failed!"
-    exit 1
-}
-
-if ($Push)
-{
-    & $sleetExe push --source $SleetFeedId $ArtifactsDir
-
-    if (-not $?)
-    {
-       Write-Error "Push failed!"
-       exit 1
-    }
-
-    & $sleetExe validate --source $SleetFeedId
-
-    if (-not $?)
-    {
-       Write-Error "Feed corrupt!"
-       exit 1
-    }
-}
-
+# run additional CI steps if on the CI machine
+Start-CIBuild $RepoRoot $RepoName 
+ 
+popd
 Write-Host "Success!"

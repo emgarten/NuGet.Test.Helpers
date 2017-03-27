@@ -2,17 +2,17 @@
 # install CLI
 Function Install-DotnetCLI {
     param(
-        [string]$RepositoryRootDir
+        [string]$RepoRoot
     )
 
-    $CLIRoot = Get-DotnetCLIRoot $RepositoryRootDir
+    $CLIRoot = Get-DotnetCLIRoot $RepoRoot
 
     New-Item -ItemType Directory -Force -Path $CLIRoot | Out-Null
 
     $env:DOTNET_HOME=$CLIRoot
     $installDotnet = Join-Path $CLIRoot "install.ps1"
 
-    $DotnetExe = DotnetCLIExe $RepositoryRootDir
+    $DotnetExe = Get-DotnetCLIExe $RepoRoot
 
     if (-not (Test-Path $DotnetExe)) {
 
@@ -35,102 +35,122 @@ Function Install-DotnetCLI {
 
 Function Get-DotnetCLIRoot {
     param(
-        [string]$RepositoryRootDir
+        [string]$RepoRoot
     )
-
-    return Join-Path $RepositoryRootDir ".cli"
+    return Join-Path $RepoRoot ".cli"
 }
 
 Function Get-DotnetCLIExe {
     param(
-        [string]$RepositoryRootDir
+        [string]$RepoRoot
     )
 
-    $CLIRoot = Get-DotnetCLIRoot $RepositoryRootDir
+    $CLIRoot = Get-DotnetCLIRoot $RepoRoot
 
     return Join-Path $CLIRoot "dotnet.exe"
 }
 
 Function Get-NuGetExePath {
     param(
-        [string]$RepositoryRootDir
+        [string]$RepoRoot
     )
 
-    return Join-Path $RepositoryRootDir ".nuget/nuget.exe"
+    return Join-Path $RepoRoot ".nuget/nuget.exe"
 }
 
-# restore packages.config
-Function Install-PackagesConfig {
+# download .nuget\nuget.exe
+Function Install-NuGetExe {
     param(
-        [string]$RepositoryRootDir
+        [string]$RepoRoot
     )
 
-    Write-Host "Restoring packages.config"
-
-    $nugetExe = Get-NuGetExePath $RepositoryRootDir
-    $packagesConfig = Join-Path $RepositoryRootDir ".nuget/packages.config"
+    $nugetExe = Get-NuGetExePath $RepoRoot
 
     if (-not (Test-Path $nugetExe))
     {
+        Write-Host "Downloading nuget.exe"
+        $nugetDir = Split-Path $nugetExe
+        New-Item -ItemType Directory -Force -Path $nugetDir
+
         wget https://dist.nuget.org/win-x86-commandline/v4.0.0/NuGet.exe -OutFile $nugetExe
     }
-
-    & $nugetExe restore $packagesConfig -SolutionDirectory $RepositoryRootDir
 }
 
-Function Get-BuildNumber([string]$inputDate) {
-    [int](((Get-Date) - (Get-Date $inputDate)).TotalMinutes / 5)
-}
-
-Function Get-SleetConfig {
-    param(
-        [string]$RepositoryRootDir
-    )
-
-    $path = Join-Path $RepositoryRootDir "sleet.json"
-
-    if (-not (Test-Path $path))
-    {
-        $parentPath =(get-item $RepositoryRootDir ).parent.FullName
-
-        $path = Join-Path $parentPath "sleet.json"
-    }
-
-    if (-not (Test-Path $path))
-    {
-        $path = "sleet.json"
-    }
-
-    return $path
-}
-
-# Tests
-Function Run-Tests {
+# Run CI specific scripts
+Function Start-CIBuild {
     param(
         [string]$RepoRoot,
-        [string]$DotnetExe
+        [string]$RepoName
     )
 
-    Write-Host "Running Tests"
+    $repoSpecificDir = Join-Path $RepoRoot $RepoName
+    $defaultDir = Join-Path $RepoRoot "default"
 
-    $failed = $false
+    $repoSpecificScript = Join-Path $repoSpecificDir "build.ps1"
+    $defaultScript = Join-Path $defaultDir "build.ps1"
 
-    Get-ChildItem (Join-Path $RepoRoot "test") -Filter *.csproj -Recurse | 
-    Foreach-Object {
-        $testProject = $_.FullName
-        Write-Host $testProject
-
-        & $dotnetExe test $testProject -c release --no-build
-
-        if (-not $?)
-        {
-            Write-Host "$testProject FAILED!!!"
-            $failed = $true
-        }
-    }
-
-    if ($failed -eq $true)
+    if (Test-Path $repoSpecificScript)
     {
+        Invoke-Expression $repoSpecificScript
+    }
+    elseif (Test-Path $defaultScript)
+    {
+        Invoke-Expression $defaultScript
+    }
+}
+
+# Delete the artifacts directory
+Function Remove-Artifacts {
+    param(
+        [string]$RepoRoot
+    )
+
+    $artifactsDir = Join-Path $RepoRoot "artifacts"
+
+    if (Test-Path $artifactsDir)
+    {
+        Remove-Item $artifactsDir -Force -Recurse
+    }
+}
+
+# Invoke dotnet exe
+Function Invoke-DotnetExe {
+    param(
+        [string]$RepoRoot,
+        [string[]]$Arguments
+    )
+
+    Write-Host "Root: $RepoRoot"
+    Write-Host "Args: $Arguments"
+
+    $dotnetExe = Get-DotnetCLIExe $RepoRoot
+    $command = "$dotnetExe $Arguments"
+
+    Write-Host "[Exec]" $command -ForegroundColor Cyan
+
+    & $dotnetExe $Arguments
+
+    if (-not $?)
+    {
+        Write-Error $command
         exit 1
     }
+}
+
+# Invoke dotnet msbuild
+Function Invoke-DotnetMSBuild {
+    param(
+        [string]$RepoRoot,
+        [string[]]$Arguments
+    )
+
+    Write-Host "Root: $RepoRoot"
+    Write-Host "Args: $Arguments"
+
+    $buildArgs = , "msbuild"
+    $buildArgs += "/nologo"
+    $buildArgs += "/v:m"
+    $buildArgs += $Arguments
+
+    Invoke-DotnetExe $RepoRoot $buildArgs
 }
