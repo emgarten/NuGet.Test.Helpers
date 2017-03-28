@@ -76,29 +76,6 @@ Function Install-NuGetExe {
     }
 }
 
-# Run CI specific scripts
-Function Start-CIBuild {
-    param(
-        [string]$RepoRoot,
-        [string]$RepoName
-    )
-
-    $repoSpecificDir = Join-Path $RepoRoot $RepoName
-    $defaultDir = Join-Path $RepoRoot "default"
-
-    $repoSpecificScript = Join-Path $repoSpecificDir "build.ps1"
-    $defaultScript = Join-Path $defaultDir "build.ps1"
-
-    if (Test-Path $repoSpecificScript)
-    {
-        Invoke-Expression $repoSpecificScript
-    }
-    elseif (Test-Path $defaultScript)
-    {
-        Invoke-Expression $defaultScript
-    }
-}
-
 # Delete the artifacts directory
 Function Remove-Artifacts {
     param(
@@ -120,9 +97,6 @@ Function Invoke-DotnetExe {
         [string[]]$Arguments
     )
 
-    Write-Host "Root: $RepoRoot"
-    Write-Host "Args: $Arguments"
-
     $dotnetExe = Get-DotnetCLIExe $RepoRoot
     $command = "$dotnetExe $Arguments"
 
@@ -143,9 +117,6 @@ Function Invoke-DotnetMSBuild {
         [string]$RepoRoot,
         [string[]]$Arguments
     )
-
-    Write-Host "Root: $RepoRoot"
-    Write-Host "Args: $Arguments"
 
     $buildArgs = , "msbuild"
     $buildArgs += "/nologo"

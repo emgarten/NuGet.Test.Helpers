@@ -195,32 +195,41 @@
     <!-- Find the last tag -->
     <Exec Command="git describe --tags --abbrev=0"
           ConsoleToMSBuild="true"
-          StandardOutputImportance="low">
+          StandardOutputImportance="low"
+          ContinueOnError="true">
       <Output TaskParameter="ConsoleOutput" PropertyName="GitTagLabel" />
+      <Output TaskParameter="ExitCode" PropertyName="GitTagLabelExitCode"/>
     </Exec>
 
     <!-- Find the number of commits since the last tag -->
     <Exec Command="git rev-list $(GitTagLabel)..HEAD --count"
       ConsoleToMSBuild="true"
-      StandardOutputImportance="low">
+      StandardOutputImportance="low"
+      ContinueOnError="true">
       <Output TaskParameter="ConsoleOutput" PropertyName="CommitsSinceLastTag" />
+      <Output TaskParameter="ExitCode" PropertyName="CommitsSinceLastTagExitCode"/>
     </Exec>
 
     <!-- Find the current commit hash -->
     <Exec Command="git rev-parse HEAD"
       ConsoleToMSBuild="true"
-      StandardOutputImportance="low">
+      StandardOutputImportance="low"
+      ContinueOnError="true">
       <Output TaskParameter="ConsoleOutput" PropertyName="GitCommitHash" />
+      <Output TaskParameter="ExitCode" PropertyName="GitCommitHashExitCode"/>
     </Exec>
 
     <!-- Find the current branch -->
     <Exec Command="git rev-parse --abbrev-ref HEAD"
       ConsoleToMSBuild="true"
-      StandardOutputImportance="low">
+      StandardOutputImportance="low"
+      ContinueOnError="true">
       <Output TaskParameter="ConsoleOutput" PropertyName="GitBranch" />
+      <Output TaskParameter="ExitCode" PropertyName="GitBranchExitCode"/>
     </Exec>
 
-    <PropertyGroup>
+    <PropertyGroup Condition=" '$(GitTagLabelExitCode)' == '0' AND '$(GitCommitHashExitCode)' == '0' AND '$(GitCommitHashExitCode)' == '0' AND '$(GitBranchExitCode)' == '0' ">
+      <GitVersionSuccess>true</GitVersionSuccess>
       <GitVersion>$(GitTagLabel.Trim())</GitVersion>
       <GitVersion>$(GitVersion.TrimStart('release/'))</GitVersion>
       <GitVersion>$(GitVersion.TrimStart('v'))</GitVersion>
@@ -230,6 +239,16 @@
       <GitBranch>$(GitBranch.Trim())</GitBranch>
       <GitVersion Condition=" '$(GitVersionIsPreRelease)' == 'true' AND '$(GitCommitsSinceLastTag)' != '0' ">$(GitVersion).$(GitCommitsSinceLastTag)</GitVersion>
       <GitVersion>$(GitVersion)+git.hash.$(GitCommitHash)</GitVersion>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(GitVersionSuccess)' != 'true' ">
+      <GitVersionSuccess>false</GitVersionSuccess>
+      <GitVersion>0.1.0-alpha</GitVersion>
+      <GitBranch>unknown</GitBranch>
+      <GitCommitHash></GitCommitHash>
+    </PropertyGroup>
+
+    <PropertyGroup>
       <GitInfoOutputPath>$(MSBuildArtifactsDirectory)git.props</GitInfoOutputPath>
     </PropertyGroup>
 
