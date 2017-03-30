@@ -38,9 +38,6 @@ if (-not $SkipPack)
 
 # Run build.proj
 Invoke-DotnetMSBuild $RepoRoot ("build\build.proj", "/t:$buildTargets", "/p:Configuration=$Configuration")
-
-# run additional CI steps if on the CI machine
-Start-CIBuild $RepoRoot $RepoName 
  
 popd
 Write-Host "Success!"
