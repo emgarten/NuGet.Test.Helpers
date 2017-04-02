@@ -1,5 +1,7 @@
 # Release Notes
 
+## 1.1.0
+
 ## 1.0.0
 * Shortened test directory path
 * NuGet.Test.Helpers.dll is now signed
