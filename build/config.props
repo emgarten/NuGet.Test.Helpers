@@ -1,14 +1,14 @@
 ﻿<Project ToolsVersion="15.0">
   <!-- Dependency versions -->
   <PropertyGroup>
-    <NuGetPackageVersion>4.0.0</NuGetPackageVersion>
+    <NuGetPackageVersion>4.3.0-preview3-4168</NuGetPackageVersion>
     <XunitVersion>2.2.0</XunitVersion>
     <XunitRunnerVisualStudioVersion>$(XunitVersion)</XunitRunnerVisualStudioVersion>
     <TestSDKVersion>15.0.0</TestSDKVersion>
     <FluentAssertionsVersion>4.19.0</FluentAssertionsVersion>
-    <SourceLinkVersion>2.0.2</SourceLinkVersion>
+    <SourceLinkVersion>2.1.2</SourceLinkVersion>
   </PropertyGroup>
-  
+
   <!-- Config -->
   <PropertyGroup>
     <RepositoryName>NuGet.Test.Helpers</RepositoryName>

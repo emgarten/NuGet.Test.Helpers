@@ -6,10 +6,17 @@
   <PropertyGroup Condition=" '$(IsXPlat)' == 'true' ">
     <TargetFrameworks>netstandard1.3</TargetFrameworks>
   </PropertyGroup>
+
   <PropertyGroup>
     <PackProject>true</PackProject>
     <Shipping>true</Shipping>
   </PropertyGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net46' ">
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.Net.Http" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="NuGet.Packaging" Version="$(NuGetPackageVersion)" />
   </ItemGroup>

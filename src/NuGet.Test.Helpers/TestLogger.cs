@@ -1,6 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Linq;
+using System.Threading.Tasks;
 using NuGet.Common;
 
 namespace NuGet.Test.Helpers
@@ -8,53 +9,20 @@ namespace NuGet.Test.Helpers
     /// <summary>
     /// NuGet ILogger that stores messages in memory.
     /// </summary>
-    public class TestLogger : ILogger
+    public class TestLogger : LoggerBase
     {
         public ConcurrentQueue<LogEntry> Messages { get; } = new ConcurrentQueue<LogEntry>();
 
-        public void LogDebug(string data)
+        public override void Log(ILogMessage message)
         {
-            Messages.Enqueue(new LogEntry(LogLevel.Debug, data));
+            Messages.Enqueue(new LogEntry(message));
         }
 
-        public void LogError(string data)
+        public override Task LogAsync(ILogMessage message)
         {
-            Messages.Enqueue(new LogEntry(LogLevel.Error, data));
-        }
+            Log(message);
 
-        public void LogErrorSummary(string data)
-        {
-            // Ignored
-        }
-
-        public void LogInformation(string data)
-        {
-            Messages.Enqueue(new LogEntry(LogLevel.Information, data));
-        }
-
-        public void LogInformationSummary(string data)
-        {
-            // Ignored
-        }
-
-        public void LogMinimal(string data)
-        {
-            Messages.Enqueue(new LogEntry(LogLevel.Minimal, data));
-        }
-
-        public void LogSummary(string data)
-        {
-            // Ignored
-        }
-
-        public void LogVerbose(string data)
-        {
-            Messages.Enqueue(new LogEntry(LogLevel.Verbose, data));
-        }
-
-        public void LogWarning(string data)
-        {
-            Messages.Enqueue(new LogEntry(LogLevel.Warning, data));
+            return Task.FromResult(true);
         }
 
         public override string ToString()
@@ -80,16 +48,17 @@ namespace NuGet.Test.Helpers
 
         public class LogEntry
         {
-            public LogLevel Level { get; }
+            public LogLevel Level => OriginalMessage.Level;
 
-            public string Message { get; }
+            public string Message => OriginalMessage.Message;
+
+            public ILogMessage OriginalMessage { get; }
 
             public DateTimeOffset Time { get; }
 
-            public LogEntry(LogLevel level, string message)
+            public LogEntry(ILogMessage message)
             {
-                Level = level;
-                Message = message;
+                OriginalMessage = message;
                 Time = DateTimeOffset.UtcNow;
             }
 

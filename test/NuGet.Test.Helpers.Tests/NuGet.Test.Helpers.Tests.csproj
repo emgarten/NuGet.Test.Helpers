@@ -4,9 +4,16 @@
     <TargetFrameworks>netcoreapp1.0;net46</TargetFrameworks>
     <RuntimeIdentifier>win7-x64</RuntimeIdentifier>
   </PropertyGroup>
+
   <PropertyGroup Condition=" '$(IsXPlat)' == 'true' ">
     <TargetFrameworks>netcoreapp1.0</TargetFrameworks>
   </PropertyGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net46' ">
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.Net.Http" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\..\src\NuGet.Test.Helpers\NuGet.Test.Helpers.csproj" />
   </ItemGroup>
