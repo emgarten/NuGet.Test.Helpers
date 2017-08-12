@@ -2,6 +2,8 @@
 
 ## 1.1.0
 
+* NETStandard2.0 support, NETStandard1.3 has been removed
+
 ## 1.0.0
 * Shortened test directory path
 * NuGet.Test.Helpers.dll is now signed
