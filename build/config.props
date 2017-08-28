@@ -25,5 +25,6 @@
     <PackageTags>nuget</PackageTags>
     <Description>NuGet helpers for creating test nupkgs.</Description>
     <Copyright>Copyright © 2017 Justin Emgarten</Copyright>
+    <PackageIconUrl>https://emgartenstatic.blob.core.windows.net/nupkgs/icons/nuget.test.helpers.png</PackageIconUrl>
   </PropertyGroup>
 </Project>
