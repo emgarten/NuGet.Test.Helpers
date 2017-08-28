@@ -1,5 +1,7 @@
 # Release Notes
 
+## 1.2.0
+
 ## 1.1.0
 * NETStandard2.0 support, NETStandard1.3 has been removed
 * NuGet 4.3.0 dependencies
