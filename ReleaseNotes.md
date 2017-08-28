@@ -1,8 +1,8 @@
 # Release Notes
 
 ## 1.1.0
-
 * NETStandard2.0 support, NETStandard1.3 has been removed
+* NuGet 4.3.0 dependencies
 
 ## 1.0.0
 * Shortened test directory path
