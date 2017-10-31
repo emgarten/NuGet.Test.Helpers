@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26228.4
+VisualStudioVersion = 15.0.27019.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NuGet.Test.Helpers", "src\NuGet.Test.Helpers\NuGet.Test.Helpers.csproj", "{2B4274CC-7983-489C-AF6B-73B959EF964B}"
 EndProject
@@ -10,6 +10,11 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{59FD35FC-42EB-4191-8A1D-A1C32F244742}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NuGet.Test.Helpers.Tests", "test\NuGet.Test.Helpers.Tests\NuGet.Test.Helpers.Tests.csproj", "{A3A2C6B3-BADA-4363-AE0B-8C00FE6E009E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{265DE0D0-90FA-4B3A-9888-D625F043C98B}"
+	ProjectSection(SolutionItems) = preProject
+		build\config.props = build\config.props
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -52,5 +57,8 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{2B4274CC-7983-489C-AF6B-73B959EF964B} = {F8C9BF68-F0F2-443B-8DC5-4AB2FAA3F8E0}
 		{A3A2C6B3-BADA-4363-AE0B-8C00FE6E009E} = {59FD35FC-42EB-4191-8A1D-A1C32F244742}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {15872FA5-B331-4FA3-A67F-462BF1D6A952}
 	EndGlobalSection
 EndGlobal
