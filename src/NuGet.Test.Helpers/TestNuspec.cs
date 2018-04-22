@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 using NuGet.Frameworks;
@@ -121,6 +121,16 @@ namespace NuGet.Test.Helpers
 
                             dependency.Add(new XAttribute(XName.Get("id"), d.Id));
                             dependency.Add(new XAttribute(XName.Get("version"), d.VersionRange.ToLegacyShortString()));
+
+                            if (d.Exclude.Count > 0)
+                            {
+                                dependency.Add(new XAttribute(XName.Get("exclude"), string.Join(",", d.Exclude)));
+                            }
+
+                            if (d.Include.Count > 0)
+                            {
+                                dependency.Add(new XAttribute(XName.Get("exclude"), string.Join(",", d.Include)));
+                            }
 
                             groupNode.Add(dependency);
                         }
