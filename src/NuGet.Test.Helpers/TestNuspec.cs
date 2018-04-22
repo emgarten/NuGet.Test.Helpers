@@ -129,7 +129,7 @@ namespace NuGet.Test.Helpers
 
                             if (d.Include.Count > 0)
                             {
-                                dependency.Add(new XAttribute(XName.Get("exclude"), string.Join(",", d.Include)));
+                                dependency.Add(new XAttribute(XName.Get("include"), string.Join(",", d.Include)));
                             }
 
                             groupNode.Add(dependency);
