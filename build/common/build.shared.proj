@@ -60,13 +60,6 @@
 
     <!-- Delete the entire artifacts dir -->
     <RemoveDir Directories="$(ArtifactsDirectory)" />
-
-    <!-- Restore before cleaning to avoid errors -->
-    <!-- Clean projects -->
-    <MSBuild BuildInParallel="true"
-         Projects="@(SolutionProjects)"
-         Targets="Restore;Clean"
-         Properties="$(CommonMSBuildProperties)" />
   </Target>
 
   <!--
