@@ -38,6 +38,12 @@ namespace NuGet.Test.Helpers
         public List<ContentFilesEntry> ContentFiles { get; set; } = new List<ContentFilesEntry>();
 
         /// <summary>
+        /// Override the returned XML nuspec with the given XDocument.
+        /// All other properties will be ignored.
+        /// </summary>
+        public XDocument XMLOverride { get; set; }
+
+        /// <summary>
         /// Create a nupkg from this nuspec.
         /// </summary>
         public TestNupkg CreateNupkg()
@@ -50,6 +56,12 @@ namespace NuGet.Test.Helpers
         /// </summary>
         public XDocument Create()
         {
+            // Use the override if one was set.
+            if (XMLOverride != null)
+            {
+                return XMLOverride;
+            }
+
             var doc = new XDocument(new XDeclaration("1.0", "utf-8", "no"));
             var package = new XElement(XName.Get("package"));
             var metadata = new XElement(XName.Get("metadata"));
