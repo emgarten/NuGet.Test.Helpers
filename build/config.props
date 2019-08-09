@@ -1,7 +1,7 @@
 <Project ToolsVersion="15.0">
   <!-- Dependency versions -->
   <PropertyGroup>
-    <NuGetPackageVersion>4.6.2</NuGetPackageVersion>
+    <NuGetPackageVersion>5.2.0</NuGetPackageVersion>
   </PropertyGroup>
 
   <!-- Config -->
@@ -18,7 +18,7 @@
     <RepositoryUrl>https://github.com/emgarten/nuget.test.helpers</RepositoryUrl>
     <PackageTags>nuget</PackageTags>
     <Description>NuGet helpers for creating test nupkgs.</Description>
-    <Copyright>Copyright © 2018 Justin Emgarten</Copyright>
+    <Copyright>Copyright © 2019 Justin Emgarten</Copyright>
     <PackageIconUrl>https://emgartenstatic.blob.core.windows.net/nupkgs/icons/nuget.test.helpers.png</PackageIconUrl>
   </PropertyGroup>
 </Project>
