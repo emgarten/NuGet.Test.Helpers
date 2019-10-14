@@ -24,7 +24,7 @@ run_standard_tests()
   $DOTNET --info
 
   # install dotnet-format
-  if [ ! -f $DOTNET_TOOLS ]; then
+  if [ ! -d $DOTNET_TOOLS ]; then
     echo "Installing dotnet tools"
     mkdir -p .nuget/tools
     
