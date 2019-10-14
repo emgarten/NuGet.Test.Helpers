@@ -5,8 +5,10 @@ run_standard_tests()
   pushd $(pwd)
 
   # Download dotnet cli
+  REPO_ROOT="$(pwd)"
   DOTNET="$(pwd)/.cli/dotnet"
-
+  DOTNET_TOOLS="$(pwd)/.nuget/tools"
+  DOTNET_FORMAT="$(DOTNET_TOOLS)/dotnet-format"
 
   if [ ! -f $DOTNET ]; then
     echo "Installing dotnet"
@@ -20,6 +22,16 @@ run_standard_tests()
 
   # Display info
   $DOTNET --info
+
+  # install dotnet-format
+  if [ ! -f $DOTNET_TOOLS ]; then
+    echo "Installing dotnet tools"
+    mkdir -p .nuget/tools
+    
+    $DOTNET tool install --tool-path $DOTNET_TOOLS --ignore-failed-sources dotnet-format --version 3.1.37601
+  fi
+
+  $DOTNET_FORMAT -w $REPO_ROOT
 
   # clean
   rm -r -f $(pwd)/artifacts
