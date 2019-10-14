@@ -20,9 +20,9 @@ Function Install-DotnetCLI {
 
         Write-Host "Fetching $installDotnet"
 
-        wget https://raw.githubusercontent.com/dotnet/cli/b3b69e36cb7b99a1b42dceb3a0167d283f653575/scripts/obtain/dotnet-install.ps1 -OutFile $installDotnet
+        wget https://raw.githubusercontent.com/dotnet/cli/1f4478755d57ed37058096ed739bbdf9b3d2eb3c/scripts/obtain/dotnet-install.ps1 -OutFile $installDotnet
 
-        & $installDotnet -Channel 2.2 -i $CLIRoot -Version 2.2.301
+        & $installDotnet -Channel 3.0 -i $CLIRoot -Version 3.0.100
 
         if (-not (Test-Path $DotnetExe)) {
             Write-Log "Missing $DotnetExe"
@@ -72,7 +72,7 @@ Function Install-NuGetExe {
         $nugetDir = Split-Path $nugetExe
         New-Item -ItemType Directory -Force -Path $nugetDir
 
-        wget https://dist.nuget.org/win-x86-commandline/v5.2.0/nuget.exe -OutFile $nugetExe
+        wget https://dist.nuget.org/win-x86-commandline/v5.3.0/nuget.exe -OutFile $nugetExe
     }
 }
 

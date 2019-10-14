@@ -3,10 +3,10 @@
   <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
   
   <PropertyGroup Condition=" '$(IsXPlat)' != 'true' ">
-    <TargetFrameworks>netstandard2.0;net472</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;net472;netstandard2.1</TargetFrameworks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(IsXPlat)' == 'true' ">
-    <TargetFrameworks>netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
   </PropertyGroup>
 
   <PropertyGroup>
