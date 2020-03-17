@@ -13,12 +13,8 @@
   <PropertyGroup>
     <Authors>emgarten</Authors>
     <PackageProjectUrl>https://github.com/emgarten/nuget.test.helpers</PackageProjectUrl>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/emgarten/nuget.test.helpers</RepositoryUrl>
     <PackageTags>nuget;nupkgs</PackageTags>
     <Description>A library for creating nupkgs and nuspecs to use in tests.</Description>
-    <Copyright>Copyright © 2020 Justin Emgarten</Copyright>
-    <PackageIcon>icon.png</PackageIcon>
   </PropertyGroup>
 </Project>
