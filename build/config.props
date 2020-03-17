@@ -1,7 +1,7 @@
 <Project ToolsVersion="15.0">
   <!-- Dependency versions -->
   <PropertyGroup>
-    <NuGetPackageVersion>5.2.0</NuGetPackageVersion>
+    <NuGetPackageVersion>5.4.0</NuGetPackageVersion>
   </PropertyGroup>
 
   <!-- Config -->
@@ -12,13 +12,13 @@
   <!-- Nuspec defaults -->
   <PropertyGroup>
     <Authors>emgarten</Authors>
-    <ProjectUrl>https://github.com/emgarten/nuget.test.helpers</ProjectUrl>
-    <PackageLicenseUrl>https://github.com/emgarten/nuget.test.helpers/blob/master/LICENSE.md</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/emgarten/nuget.test.helpers</PackageProjectUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/emgarten/nuget.test.helpers</RepositoryUrl>
-    <PackageTags>nuget</PackageTags>
-    <Description>NuGet helpers for creating test nupkgs.</Description>
-    <Copyright>Copyright © 2019 Justin Emgarten</Copyright>
-    <PackageIconUrl>https://emgartenstatic.blob.core.windows.net/nupkgs/icons/nuget.test.helpers.png</PackageIconUrl>
+    <PackageTags>nuget;nupkgs</PackageTags>
+    <Description>A library for creating nupkgs and nuspecs to use in tests.</Description>
+    <Copyright>Copyright © 2020 Justin Emgarten</Copyright>
+    <PackageIcon>icon.png</PackageIcon>
   </PropertyGroup>
 </Project>
