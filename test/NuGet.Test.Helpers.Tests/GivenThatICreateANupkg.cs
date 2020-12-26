@@ -145,5 +145,28 @@ namespace NuGet.Test.Helpers.Tests
                 }
             }
         }
+
+        [Fact]
+        public void VerifyIconIsSet()
+        {
+            using (var folder = new TestFolder())
+            {
+                var nuspec = new TestNuspec()
+                {
+                    Id = "a",
+                    Version = "1.0.0",
+                    Icon = "images/icon.png"
+                };
+
+                var path = nuspec.CreateNupkg().Save(folder);
+
+                using (var reader = new PackageArchiveReader(path.FullName))
+                {
+                    var result = reader.NuspecReader.GetIcon();
+
+                    result.Should().Be("images/icon.png");
+                }
+            }
+        }
     }
 }
