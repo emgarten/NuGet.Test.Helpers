@@ -1,7 +1,7 @@
 <Project ToolsVersion="15.0">
   <!-- Dependency versions -->
   <PropertyGroup>
-    <NuGetPackageVersion>5.4.0</NuGetPackageVersion>
+    <NuGetPackageVersion>5.8.0</NuGetPackageVersion>
   </PropertyGroup>
 
   <!-- Config -->

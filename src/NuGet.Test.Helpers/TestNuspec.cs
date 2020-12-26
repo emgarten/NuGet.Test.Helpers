@@ -24,6 +24,7 @@ namespace NuGet.Test.Helpers
         public string Summary { get; set; }
         public string Language { get; set; }
         public string ProjectUrl { get; set; }
+        public string Icon { get; set; }
         public string IconUrl { get; set; }
         public string LicenseUrl { get; set; }
         public string Copyright { get; set; }
@@ -85,6 +86,7 @@ namespace NuGet.Test.Helpers
             AddIfExists(metadata, "language", Language);
             AddIfExists(metadata, "projectUrl", ProjectUrl);
             AddIfExists(metadata, "iconUrl", IconUrl);
+            AddIfExists(metadata, "icon", Icon);
             AddIfExists(metadata, "licenseUrl", LicenseUrl);
             AddIfExists(metadata, "copyright", Copyright);
             AddIfExists(metadata, "requireLicenseAcceptance", RequireLicenseAcceptance);
