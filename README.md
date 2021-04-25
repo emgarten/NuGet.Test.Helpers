@@ -23,4 +23,4 @@ The list of packages on this feed is [here](https://nuget.blob.core.windows.net/
 This solution uses .NET Core, get the tools [here](http://dot.net/).
 
 ### License
-[MIT License](https://github.com/emgarten/NuGet.Test.Helpers/blob/master/LICENSE.md)
+[MIT License](https://github.com/emgarten/NuGet.Test.Helpers/blob/main/LICENSE.md)
