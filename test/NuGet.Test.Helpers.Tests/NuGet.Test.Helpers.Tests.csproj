@@ -1,26 +1,13 @@
-﻿<Project ToolsVersion="15.0">
+<Project ToolsVersion="15.0">
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), 'README.md'))\build\common\test.props" />
   <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
 
-  <PropertyGroup Condition=" '$(IsXPlat)' != 'true' ">
-    <TargetFrameworks>net5.0</TargetFrameworks>
+  <PropertyGroup>
+    <TargetFrameworks>net6.0</TargetFrameworks>
   </PropertyGroup>
-
-  <PropertyGroup Condition=" '$(IsXPlat)' == 'true' ">
-    <TargetFrameworks>net5.0</TargetFrameworks>
-  </PropertyGroup>
-
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net472' ">
-    <Reference Include="System.IO.Compression" />
-    <Reference Include="System.Net.Http" />
-  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\NuGet.Test.Helpers\NuGet.Test.Helpers.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Service Include="{82a7f48d-3b50-4b1e-b82e-3ada8210c358}" />
   </ItemGroup>
 
   <PropertyGroup>
