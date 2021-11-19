@@ -31,7 +31,7 @@ run_standard_tests()
     $DOTNET tool install --tool-path $DOTNET_TOOLS --ignore-failed-sources dotnet-format --version 5.1.250801
   fi
 
-  $DOTNET_FORMAT --fix-whitespace --fix-style warn --fix-analyzers warn
+  $DOTNET_FORMAT --fix-whitespace --fix-style warn
 
   # clean
   rm -r -f $(pwd)/artifacts

@@ -157,7 +157,7 @@ Function Invoke-DotnetFormat {
 
     $formatExe = Join-Path $RepoRoot ".nuget/tools/dotnet-format.exe"
 
-    $args = @("--fix-whitespace","--fix-style", "warn", "--fix-analyzers", "warn")
+    $args = @("--fix-whitespace","--fix-style", "warn")
 
     # On CI builds run a check instead of making code changes
     if ($env:CI -eq "True") 
