@@ -1,5 +1,8 @@
 # Release Notes
 
+## 2.1.24
+* Update NuGet.* packages to 6.2.1
+
 ## 2.1.0
 * netstandard2.1 support
 
