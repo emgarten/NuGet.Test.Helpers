@@ -1,5 +1,6 @@
 # NuGet.Test.Helpers
-Helper library for creating NuGet test packages.
+
+Helper library for creating NuGet test packages. The intent of this library is to make it easy to generate NuGet packages and nuspecs in unit and functional tests for testing libraries that work with NuGet packages and NuGet feed generators.
 
 | AppVeyor | Azure Pipelines |
 | --- | --- |
