@@ -7,6 +7,7 @@
   <!-- Config -->
   <PropertyGroup>
     <RepositoryName>NuGet.Test.Helpers</RepositoryName>
+    <PackageIconPath>$(MSBuildThisFileDirectory)/icons/icon.png</PackageIconPath>
   </PropertyGroup>
 
   <!-- Nuspec defaults -->
