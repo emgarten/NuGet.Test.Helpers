@@ -6,5 +6,7 @@ branches:
     - main
 build_script:
   - build.cmd
+before_build:
+  - choco install dotnet-sdk --version 8.0.100
 clone_depth: 1
 test: off
