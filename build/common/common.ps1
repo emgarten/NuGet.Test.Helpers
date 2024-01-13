@@ -23,7 +23,7 @@ Function Install-DotnetCLI {
         wget https://dot.net/v1/dotnet-install.ps1 -OutFile $installDotnet
 
         & $installDotnet -Channel 6.0 -i $CLIRoot
-        & $installDotnet -Channel 7.0 -i $CLIRoot
+        & $installDotnet -Channel 8.0 -i $CLIRoot
 
         if (-not (Test-Path $DotnetExe)) {
             Write-Log "Missing $DotnetExe"
