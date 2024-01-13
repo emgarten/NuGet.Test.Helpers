@@ -1,5 +1,9 @@
 # Release Notes
 
+## 2.1.35
+* Update NuGet.* packages to 6.8.0
+* net8.0 support
+
 ## 2.1.24
 * Update NuGet.* packages to 6.2.1
 
