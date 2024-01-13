@@ -20,7 +20,7 @@ Function Install-DotnetCLI {
 
         Write-Host "Fetching $installDotnet"
 
-        wget https://dot.net/v1/dotnet-install.ps1 -OutFile $installDotnet
+        Invoke-WebRequest https://dot.net/v1/dotnet-install.ps1 -OutFile $installDotnet
 
         & $installDotnet -Channel 6.0 -i $CLIRoot
         & $installDotnet -Channel 8.0 -i $CLIRoot
@@ -72,7 +72,7 @@ Function Install-NuGetExe {
         $nugetDir = Split-Path $nugetExe
         New-Item -ItemType Directory -Force -Path $nugetDir
 
-        wget https://dist.nuget.org/win-x86-commandline/v6.0.0/nuget.exe -OutFile $nugetExe
+        Invoke-WebRequest https://dist.nuget.org/win-x86-commandline/v6.8.0/nuget.exe -OutFile $nugetExe
     }
 }
 
