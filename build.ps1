@@ -7,16 +7,13 @@ param (
 
 $RepoName = "NuGet.Test.Helpers"
 $RepoRoot = $PSScriptRoot
-pushd $RepoRoot
+Push-Location $RepoRoot
 
 # Load common build script helper methods
 . "$PSScriptRoot\build\common\common.ps1"
 
 # Download tools
 Install-CommonBuildTools $RepoRoot
-
-# Run dotnet-format to apply style fixes or fail on CI builds
-Invoke-DotnetFormat $RepoRoot
 
 # Clean and write git info
 Remove-Artifacts $RepoRoot
@@ -41,5 +38,5 @@ if (-not $SkipTests)
 # Run build.proj
 Invoke-DotnetMSBuild $RepoRoot ("build\build.proj", "/t:$buildTargets", "/p:Configuration=$Configuration")
  
-popd
+Pop-Location
 Write-Host "Success!"
