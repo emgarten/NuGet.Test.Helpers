@@ -1,5 +1,9 @@
 # Release Notes
 
+## 2.1.37
+* Update NuGet.* packages to 6.12.1
+* net9.0 support
+
 ## 2.1.36
 * Updated NuGet.* packages to 6.9.1 to address CVE-2024-0057
 
