@@ -1,5 +1,8 @@
 # Release Notes
 
+## 2.1.38
+* Readme support
+
 ## 2.1.37
 * Update NuGet.* packages to 6.12.1
 * net9.0 support

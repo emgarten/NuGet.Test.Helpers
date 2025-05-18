@@ -33,6 +33,7 @@ namespace NuGet.Test.Helpers
         public string DevelopmentDependency { get; set; }
         public string Serviceable { get; set; }
         public bool IsSymbolPackage { get; set; }
+        public string Readme { get; set; }
         public List<string> PackageTypes { get; set; } = new List<string>();
         public List<PackageDependencyGroup> Dependencies { get; set; } = new List<PackageDependencyGroup>();
         public List<KeyValuePair<string, List<NuGetFramework>>> FrameworkAssemblies { get; set; } = new List<KeyValuePair<string, List<NuGetFramework>>>();
@@ -93,6 +94,7 @@ namespace NuGet.Test.Helpers
             AddIfExists(metadata, "tags", Tags);
             AddIfExists(metadata, "developmentDependency", DevelopmentDependency);
             AddIfExists(metadata, "serviceable", Serviceable);
+            AddIfExists(metadata, "readme", Readme);
 
             if (PackageTypes.Any())
             {

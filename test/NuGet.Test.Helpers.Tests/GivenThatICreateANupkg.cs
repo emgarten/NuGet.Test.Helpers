@@ -168,5 +168,28 @@ namespace NuGet.Test.Helpers.Tests
                 }
             }
         }
+
+        [Fact]
+        public void VerifyReadmeIsSet()
+        {
+            using (var folder = new TestFolder())
+            {
+                var nuspec = new TestNuspec()
+                {
+                    Id = "a",
+                    Version = "1.0.0",
+                    Readme = "README.md"
+                };
+
+                var path = nuspec.CreateNupkg().Save(folder);
+
+                using (var reader = new PackageArchiveReader(path.FullName))
+                {
+                    var result = reader.NuspecReader.GetReadme();
+
+                    result.Should().Be("README.md");
+                }
+            }
+        }
     }
 }
