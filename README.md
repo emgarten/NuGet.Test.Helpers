@@ -4,9 +4,9 @@
 
 Helper library for creating NuGet test packages. The intent of this library is to make it easy to generate NuGet packages and nuspecs in unit and functional tests for testing libraries that work with NuGet packages and NuGet feed generators.
 
-| AppVeyor | Azure Pipelines | Github |
-| --- | --- | --- |
-| [![AppVeyor](https://ci.appveyor.com/api/projects/status/w5lynishdr2yrb7m?svg=true)](https://ci.appveyor.com/project/emgarten/nuget-test-helpers) | [![VSO](https://hackamore.visualstudio.com/Build/_apis/build/status/NuGet.Test.Helpers)](https://github.com/emgarten/NuGet.Test.Helpers) | [![.NET test](https://github.com/emgarten/NuGet.Test.Helpers/actions/workflows/dotnet.yml/badge.svg)](https://github.com/emgarten/NuGet.Test.Helpers/actions/workflows/dotnet.yml) |
+| Github |
+| --- |
+| [![.NET test](https://github.com/emgarten/NuGet.Test.Helpers/actions/workflows/dotnet.yml/badge.svg)](https://github.com/emgarten/NuGet.Test.Helpers/actions/workflows/dotnet.yml) |
 
 ## Getting NuGet.Test.Helpers
 
