@@ -3,6 +3,9 @@
 
 name: Publish to NuGet.org
 
+on:
+  workflow_dispatch:   # ↩️ manual trigger only
+
 jobs:
   build-win:
 
