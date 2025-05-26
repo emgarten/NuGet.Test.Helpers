@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 
 namespace NuGet.Test.Helpers
 {
@@ -33,7 +34,13 @@ namespace NuGet.Test.Helpers
         public TestNupkgFile(string path, byte[] bytes)
         {
             Path = path ?? throw new ArgumentNullException(nameof(path));
-            Bytes = bytes;
+            if (bytes == null)
+            {
+                throw new ArgumentNullException(nameof(bytes));
+            }
+
+            // Store a copy to prevent external mutations
+            Bytes = bytes.ToArray();
         }
 
         public override string ToString()
