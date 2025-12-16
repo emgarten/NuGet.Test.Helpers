@@ -10,9 +10,9 @@
   <!-- Defaults -->
   <PropertyGroup>
     <SkipSourceLink>true</SkipSourceLink>
-    <!-- <Nullable>enable</Nullable> -->
+    <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <LangVersion>10.0</LangVersion>
+    <LangVersion>14.0</LangVersion>
   </PropertyGroup>
 
   <!-- Compiler flags -->
@@ -23,7 +23,7 @@
         <IsDesktop>true</IsDesktop>
       </PropertyGroup>
     </When>
-    <When Condition="$(TargetFramework.Contains('netstandard')) OR $(TargetFramework.Contains('netcoreapp')) OR $(TargetFramework.Contains('net5')) OR $(TargetFramework.Contains('net6')) OR $(TargetFramework.Contains('net7')) OR $(TargetFramework.Contains('net8')) OR $(TargetFramework.Contains('net9'))">
+    <When Condition="$(TargetFramework.Contains('netstandard')) OR $(TargetFramework.Contains('netcoreapp')) OR $(TargetFramework.Contains('net5')) OR $(TargetFramework.Contains('net6')) OR $(TargetFramework.Contains('net7')) OR $(TargetFramework.Contains('net8')) OR $(TargetFramework.Contains('net9')) OR $(TargetFramework.Contains('net10'))">
       <PropertyGroup>
         <DefineConstants>$(DefineConstants);IS_CORECLR</DefineConstants>
         <IsCore>true</IsCore>
