@@ -15,25 +15,25 @@ namespace NuGet.Test.Helpers
     {
         public string Id { get; set; } = "a";
         public string Version { get; set; } = "1.0.0";
-        public string MinClientVersion { get; set; }
-        public string Title { get; set; }
-        public string Authors { get; set; }
-        public string Owners { get; set; }
-        public string Description { get; set; }
-        public string ReleaseNotes { get; set; }
-        public string Summary { get; set; }
-        public string Language { get; set; }
-        public string ProjectUrl { get; set; }
-        public string Icon { get; set; }
-        public string IconUrl { get; set; }
-        public string LicenseUrl { get; set; }
-        public string Copyright { get; set; }
-        public string RequireLicenseAcceptance { get; set; }
-        public string Tags { get; set; }
-        public string DevelopmentDependency { get; set; }
-        public string Serviceable { get; set; }
+        public string? MinClientVersion { get; set; }
+        public string? Title { get; set; }
+        public string? Authors { get; set; }
+        public string? Owners { get; set; }
+        public string? Description { get; set; }
+        public string? ReleaseNotes { get; set; }
+        public string? Summary { get; set; }
+        public string? Language { get; set; }
+        public string? ProjectUrl { get; set; }
+        public string? Icon { get; set; }
+        public string? IconUrl { get; set; }
+        public string? LicenseUrl { get; set; }
+        public string? Copyright { get; set; }
+        public string? RequireLicenseAcceptance { get; set; }
+        public string? Tags { get; set; }
+        public string? DevelopmentDependency { get; set; }
+        public string? Serviceable { get; set; }
         public bool IsSymbolPackage { get; set; }
-        public string Readme { get; set; }
+        public string? Readme { get; set; }
         public List<string> PackageTypes { get; set; } = new List<string>();
         public List<PackageDependencyGroup> Dependencies { get; set; } = new List<PackageDependencyGroup>();
         public List<KeyValuePair<string, List<NuGetFramework>>> FrameworkAssemblies { get; set; } = new List<KeyValuePair<string, List<NuGetFramework>>>();
@@ -43,7 +43,7 @@ namespace NuGet.Test.Helpers
         /// Override the returned XML nuspec with the given XDocument.
         /// All other properties will be ignored.
         /// </summary>
-        public XDocument XMLOverride { get; set; }
+        public XDocument? XMLOverride { get; set; }
 
         /// <summary>
         /// Create a nupkg from this nuspec.
@@ -224,7 +224,7 @@ namespace NuGet.Test.Helpers
             return $"{Id} {Version}";
         }
 
-        private static void AddIfExists(XElement root, string elementName, string value)
+        private static void AddIfExists(XElement root, string elementName, string? value)
         {
             if (!string.IsNullOrEmpty(value))
             {

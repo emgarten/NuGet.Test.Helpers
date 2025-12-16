@@ -1,5 +1,8 @@
 # Release Notes
 
+## 2.1.40
+* net10.0 support
+
 ## 2.1.38
 * Readme support
 
