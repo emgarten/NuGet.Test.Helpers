@@ -22,7 +22,6 @@ Function Install-DotnetCLI {
 
         Invoke-WebRequest https://dot.net/v1/dotnet-install.ps1 -OutFile $installDotnet
 
-        & $installDotnet -Channel 6.0 -i $CLIRoot
         & $installDotnet -Channel 8.0 -i $CLIRoot
         & $installDotnet -Channel 9.0 -i $CLIRoot
         & $installDotnet -Channel 10.0 -i $CLIRoot
