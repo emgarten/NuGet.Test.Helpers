@@ -36,7 +36,7 @@ if (-not $SkipTests)
 }
 
 # Run build.proj
-Invoke-DotnetMSBuild $RepoRoot ("build\build.proj", "/t:$buildTargets", "/p:Configuration=$Configuration")
- 
+Invoke-DotnetMSBuild $RepoRoot ("build\build.proj", "/t:$buildTargets", "/p:Configuration=$Configuration /v:d")
+
 Pop-Location
 Write-Host "Success!"
