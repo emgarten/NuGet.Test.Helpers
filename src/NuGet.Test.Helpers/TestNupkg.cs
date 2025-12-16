@@ -16,7 +16,7 @@ namespace NuGet.Test.Helpers
 
         public List<TestNupkgFile> Files { get; set; } = new List<TestNupkgFile>();
 
-        public string LastSavePath { get; private set; }
+        public string? LastSavePath { get; private set; }
 
         public TestNupkg()
         {
@@ -109,7 +109,7 @@ namespace NuGet.Test.Helpers
                 throw new InvalidOperationException($"File already exists: {nupkgFile.FullName}");
             }
 
-            nupkgFile.Directory.Create();
+            nupkgFile.Directory?.Create();
 
             using (var zip = new ZipArchive(File.Create(nupkgFile.FullName), ZipArchiveMode.Create))
             {
