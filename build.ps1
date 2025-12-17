@@ -22,21 +22,20 @@ Invoke-DotnetMSBuild $RepoRoot ("build\build.proj", "/t:Clean;WriteGitInfo", "/p
 # Restore
 Invoke-DotnetMSBuild $RepoRoot ("build\build.proj", "/t:Restore", "/p:Configuration=$Configuration")
 
-# Run main build
-$buildTargets = "Build"
+# Run build.proj
+Invoke-DotnetMSBuild $RepoRoot ("build\build.proj", "/t:Build", "/p:Configuration=$Configuration")
 
 if (-not $SkipPack)
 {
-    $buildTargets += ";Pack"
+    # Run build.proj
+    Invoke-DotnetMSBuild $RepoRoot ("build\build.proj", "/t:Pack", "/p:Configuration=$Configuration")
 }
 
 if (-not $SkipTests)
 {
-    $buildTargets += ";Test"
+    Invoke-DotnetExe $RepoRoot ("test", "NuGet.Test.Helpers.sln")
 }
 
-# Run build.proj
-Invoke-DotnetMSBuild $RepoRoot ("build\build.proj", "/t:$buildTargets", "/p:Configuration=$Configuration /v:d")
 
 Pop-Location
 Write-Host "Success!"

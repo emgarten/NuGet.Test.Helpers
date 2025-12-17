@@ -116,7 +116,7 @@ namespace NuGet.Test.Helpers.Tests
 
                 using (var reader = new PackageArchiveReader(path.FullName))
                 {
-                    reader.NuspecReader.GetPackageTypes().ShouldBeEquivalentTo(new string[] { });
+                    reader.NuspecReader.GetPackageTypes().Should().BeEmpty();
                 }
             }
         }
