@@ -16,7 +16,7 @@ namespace NuGet.Test.Helpers
         /// <summary>
         /// File content.
         /// </summary>
-        public byte[] Bytes { get; } = new byte[0];
+        public byte[] Bytes { get; } = Array.Empty<byte>();
 
         /// <summary>
         /// Nupkg file.
@@ -33,11 +33,9 @@ namespace NuGet.Test.Helpers
         /// <param name="path">Relative path in the nupkg. Ex: lib/net45/a.dll</param>
         public TestNupkgFile(string path, byte[] bytes)
         {
-            Path = path ?? throw new ArgumentNullException(nameof(path));
-            if (bytes == null)
-            {
-                throw new ArgumentNullException(nameof(bytes));
-            }
+            ArgumentNullException.ThrowIfNull(path);
+            ArgumentNullException.ThrowIfNull(bytes);
+            Path = path;
 
             // Store a copy to prevent external mutations
             Bytes = bytes.ToArray();

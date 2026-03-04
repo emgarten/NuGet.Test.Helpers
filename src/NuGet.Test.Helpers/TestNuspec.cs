@@ -96,13 +96,13 @@ namespace NuGet.Test.Helpers
             AddIfExists(metadata, "serviceable", Serviceable);
             AddIfExists(metadata, "readme", Readme);
 
-            if (PackageTypes.Any())
+            if (PackageTypes.Count > 0)
             {
                 metadata.Add(new XElement(XName.Get("packageTypes"),
                     PackageTypes.Select(s => new XElement(XName.Get("packageType"), new XAttribute(XName.Get("name"), s)))));
             }
 
-            if (Dependencies.Any())
+            if (Dependencies.Count > 0)
             {
                 var dependencies = new XElement(XName.Get("dependencies"));
                 metadata.Add(dependencies);
@@ -154,7 +154,7 @@ namespace NuGet.Test.Helpers
                 }
             }
 
-            if (FrameworkAssemblies.Any())
+            if (FrameworkAssemblies.Count > 0)
             {
                 var frameworkAssemblies = new XElement(XName.Get("frameworkAssemblies"));
                 metadata.Add(frameworkAssemblies);

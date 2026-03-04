@@ -75,15 +75,8 @@ namespace NuGet.Test.Helpers
 
         public void AddDependency(NuGetFramework framework, TestNupkg dependencyContext)
         {
-            if (dependencyContext == null)
-            {
-                throw new ArgumentNullException(nameof(dependencyContext));
-            }
-
-            if (framework == null)
-            {
-                throw new ArgumentNullException(nameof(framework));
-            }
+            ArgumentNullException.ThrowIfNull(dependencyContext);
+            ArgumentNullException.ThrowIfNull(framework);
 
             Nuspec.AddDependency(framework, dependencyContext.Nuspec);
         }
