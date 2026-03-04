@@ -58,6 +58,8 @@ namespace NuGet.Test.Helpers
                 {
                 }
             }
+
+            GC.SuppressFinalize(this);
         }
     }
 }
