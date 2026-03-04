@@ -18,4 +18,14 @@
     <PackageTags>nuget;nupkgs</PackageTags>
     <Description>A library for creating nupkgs and nuspecs to use in tests.</Description>
   </PropertyGroup>
+
+  <PropertyGroup>
+    <NoWarn>$(NoWarn)</NoWarn>
+  </PropertyGroup>
+
+  <!-- Analyzers -->
+   <PropertyGroup>
+      <AnalysisMode>Recommended</AnalysisMode>
+      <NoWarn>$(NoWarn);CA2211;CA1308;CA2007;CA1051</NoWarn>
+   </PropertyGroup>
 </Project>
