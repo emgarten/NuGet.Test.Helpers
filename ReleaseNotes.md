@@ -1,5 +1,8 @@
 # Release Notes
 
+## 2.1.54
+* Update NuGet.* packages to 7.6.0
+
 ## 2.1.40
 * net10.0 support
 
