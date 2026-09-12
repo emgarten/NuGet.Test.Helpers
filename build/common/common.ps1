@@ -5,6 +5,22 @@ Function Install-DotnetCLI {
         [string]$RepoRoot
     )
 
+    if (-not [string]::IsNullOrWhiteSpace($env:DOTNET_EXE_PATH)) {
+        if ($null -eq (Get-Command $env:DOTNET_EXE_PATH -ErrorAction SilentlyContinue)) {
+            Write-Error "Unable to find dotnet executable: $env:DOTNET_EXE_PATH"
+            exit 1
+        }
+
+        & $env:DOTNET_EXE_PATH --info
+
+        if (-not $?) {
+            Write-Error "Unable to run dotnet executable: $env:DOTNET_EXE_PATH"
+            exit 1
+        }
+
+        return
+    }
+
     $CLIRoot = Get-DotnetCLIRoot $RepoRoot
 
     New-Item -ItemType Directory -Force -Path $CLIRoot | Out-Null
@@ -46,6 +62,10 @@ Function Get-DotnetCLIExe {
     param(
         [string]$RepoRoot
     )
+
+    if (-not [string]::IsNullOrWhiteSpace($env:DOTNET_EXE_PATH)) {
+        return $env:DOTNET_EXE_PATH
+    }
 
     $CLIRoot = Get-DotnetCLIRoot $RepoRoot
 
@@ -121,7 +141,7 @@ Function Invoke-DotnetMSBuild {
     $buildArgs += "/nologo"
     $buildArgs += "/v:m"
     $buildArgs += "/nr:false"
-    $buildArgs += "/m:1"
+    $buildArgs += "/m"
     $buildArgs += $Arguments
 
     Invoke-DotnetExe $RepoRoot $buildArgs
@@ -133,5 +153,15 @@ Function Install-CommonBuildTools {
     )
 
     Install-DotnetCLI $RepoRoot
-    Install-NuGetExe $RepoRoot
+
+    $packagesConfigPaths = @(
+        (Join-Path $RepoRoot "build\common\packages.common.config"),
+        (Join-Path $RepoRoot "build\packages.config"),
+        (Join-Path $RepoRoot ".ci\common\packages.common.config"),
+        (Join-Path $RepoRoot ".ci\common\packages.config")
+    )
+
+    if ($packagesConfigPaths | Where-Object { Test-Path $_ } | Select-Object -First 1) {
+        Install-NuGetExe $RepoRoot
+    }
 }

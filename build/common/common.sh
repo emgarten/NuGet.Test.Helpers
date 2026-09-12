@@ -13,9 +13,14 @@ run_standard_tests()
 
   # Download dotnet cli
   REPO_ROOT=$(pwd)
-  DOTNET=$(pwd)/.cli/dotnet
+  DOTNET=${DOTNET_EXE_PATH:-$(pwd)/.cli/dotnet}
 
-  if [ ! -f $DOTNET ]; then
+  if [ -n "${DOTNET_EXE_PATH:-}" ]; then
+    if ! command -v "$DOTNET" >/dev/null 2>&1; then
+      echo "Unable to find dotnet executable: $DOTNET"
+      exit 1
+    fi
+  elif [ ! -f "$DOTNET" ]; then
     echo ""
     echo "===> Installing .NET SDK..."
     echo ""
@@ -35,64 +40,14 @@ run_standard_tests()
   echo ""
   run_command $DOTNET --info
 
-  # clean
+  # Clean, restore, build, and pack
   echo ""
-  echo "===> Cleaning artifacts directory..."
+  echo "===> Building projects and creating NuGet packages..."
   echo ""
-  run_command rm -r -f $(pwd)/artifacts
-
-  # Clean projects and write out git info
-  echo ""
-  echo "===> Cleaning projects and writing git info..."
-  echo ""
-  run_command $DOTNET msbuild build/build.proj /t:Clean\;WriteGitInfo /p:Configuration=Release /nologo /v:m
-
-  if [ $? -ne 0 ]; then
-    echo "Clean;WriteGitInfo FAILED!"
-    exit 1
-  fi
-
-  # restore
-  echo ""
-  echo "===> Restoring NuGet packages..."
-  echo ""
-  run_command $DOTNET msbuild build/build.proj /t:Restore /p:Configuration=Release /nologo /v:m
-
-  if [ $? -ne 0 ]; then
-    echo "Restore FAILED!"
-    exit 1
-  fi
-
-  # build
-  echo ""
-  echo "===> Building projects..."
-  echo ""
-  run_command $DOTNET msbuild build/build.proj /t:Build /p:Configuration=Release /nologo /v:m
+  run_command $DOTNET msbuild build/build.proj /t:Clean\;WriteGitInfo\;Restore\;Build\;Pack /p:Configuration=Release /nologo /v:m /nr:false /m
 
   if [ $? -ne 0 ]; then
     echo "Build FAILED!"
-    exit 1
-  fi
-
-  # publish
-  echo ""
-  echo "===> Publishing projects..."
-  echo ""
-  run_command $DOTNET msbuild build/build.proj /t:Publish /p:Configuration=Release /nologo /v:m
-
-  if [ $? -ne 0 ]; then
-    echo "Publish FAILED!"
-    exit 1
-  fi
-
-  # pack
-  echo ""
-  echo "===> Creating NuGet packages..."
-  echo ""
-  run_command $DOTNET msbuild build/build.proj /t:Pack /p:Configuration=Release /nologo /v:m
-
-  if [ $? -ne 0 ]; then
-    echo "Pack FAILED!"
     exit 1
   fi
 
@@ -111,7 +66,7 @@ run_standard_tests()
   
   for sln in $SLN_FILES; do
     echo "Running tests for solution: $sln"
-    run_command $DOTNET test "$sln" --configuration Debug
+    run_command $DOTNET test "$sln" --configuration Release --no-build --no-restore
     
     if [ $? -ne 0 ]; then
       echo "Test FAILED for $sln!"

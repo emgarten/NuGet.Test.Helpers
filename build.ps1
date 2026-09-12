@@ -15,27 +15,19 @@ Push-Location $RepoRoot
 # Download tools
 Install-CommonBuildTools $RepoRoot
 
-# Clean and write git info
-Remove-Artifacts $RepoRoot
-Invoke-DotnetMSBuild $RepoRoot ("build\build.proj", "/t:Clean;WriteGitInfo", "/p:Configuration=$Configuration")
-
-# Restore
-Invoke-DotnetMSBuild $RepoRoot ("build\build.proj", "/t:Restore", "/p:Configuration=$Configuration")
-
-# Run build.proj
-Invoke-DotnetMSBuild $RepoRoot ("build\build.proj", "/t:Build", "/p:Configuration=$Configuration")
+$buildTargets = "Clean;WriteGitInfo;Restore;Build"
 
 if (-not $SkipPack)
 {
-    # Run build.proj
-    Invoke-DotnetMSBuild $RepoRoot ("build\build.proj", "/t:Pack", "/p:Configuration=$Configuration")
+    $buildTargets += ";Pack"
 }
+
+Invoke-DotnetMSBuild $RepoRoot ("build\build.proj", "/t:$buildTargets", "/p:Configuration=$Configuration")
 
 if (-not $SkipTests)
 {
-    Invoke-DotnetExe $RepoRoot ("test", "NuGet.Test.Helpers.sln")
+    Invoke-DotnetExe $RepoRoot ("test", "NuGet.Test.Helpers.sln", "--configuration", $Configuration, "--no-build", "--no-restore")
 }
-
 
 Pop-Location
 Write-Host "Success!"
