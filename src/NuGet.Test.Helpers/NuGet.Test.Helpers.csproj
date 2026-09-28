@@ -1,19 +1,22 @@
-<Project ToolsVersion="15.0">
-  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), 'README.md'))\build\common\common.props" />
+<Project>
+  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), 'README.md'))\build\common.props" />
   <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
 
   <PropertyGroup>
     <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
-  </PropertyGroup>
-
-  <PropertyGroup>
-    <PackProject>true</PackProject>
-    <Shipping>true</Shipping>
+    <Description>A library for creating nupkgs and nuspecs to use in tests.</Description>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);1591;1573</NoWarn>
+    <PackageReadmeFile>PACKAGE.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="NuGet.Packaging" Version="$(NuGetPackageVersion)" />
+    <None Include="PACKAGE.md" Pack="true" PackagePath="" />
   </ItemGroup>
-  <Import Project="$(BuildCommonDirectory)\common.targets" />
+
+  <ItemGroup>
+    <PackageReference Include="NuGet.Packaging" />
+  </ItemGroup>
+
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
 </Project>

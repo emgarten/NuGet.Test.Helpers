@@ -1,5 +1,8 @@
 # Release Notes
 
+## 2.2.1
+* Added a package readme
+
 ## 2.1.54
 * Update NuGet.* packages to 7.6.0
 
