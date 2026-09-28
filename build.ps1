@@ -5,37 +5,100 @@ param (
     [string]$Configuration = "Release"
 )
 
-$RepoName = "NuGet.Test.Helpers"
+$ErrorActionPreference = "Stop"
+$ProgressPreference = "SilentlyContinue"
+
 $RepoRoot = $PSScriptRoot
+$ArtifactsDir = Join-Path $RepoRoot "artifacts"
+$DotnetDir = Join-Path $RepoRoot ".dotnet"
+$IsWindowsOS = $env:OS -eq "Windows_NT"
+
+Function Invoke-Exe {
+    param(
+        [string]$Exe,
+        [string[]]$Arguments
+    )
+
+    Write-Host "[Exec] $Exe $Arguments" -ForegroundColor Cyan
+    & $Exe @Arguments
+
+    if ($LASTEXITCODE -ne 0) {
+        throw "Command failed with exit code $($LASTEXITCODE): $Exe $Arguments"
+    }
+}
+
+# True if dotnet has the SDK from global.json and the runtimes used by the tests
+Function Test-Dotnet([string]$Dotnet) {
+    if (-not $Dotnet -or -not (Test-Path $Dotnet)) {
+        return $false
+    }
+
+    $ErrorActionPreference = "Continue"
+    & $Dotnet --version *> $null
+
+    if ($LASTEXITCODE -ne 0) {
+        return $false
+    }
+
+    $runtimes = (& $Dotnet --list-runtimes) -join "`n"
+    return $runtimes -match "(?m)^Microsoft\.NETCore\.App 8\." -and $runtimes -match "(?m)^Microsoft\.NETCore\.App 9\."
+}
+
+# Install the SDK from global.json and the runtimes used by the tests to .dotnet
+Function Install-Dotnet {
+    New-Item -ItemType Directory -Force -Path $DotnetDir | Out-Null
+    $installScript = Join-Path $DotnetDir "dotnet-install.ps1"
+    Invoke-WebRequest https://dot.net/v1/dotnet-install.ps1 -OutFile $installScript -UseBasicParsing
+
+    & $installScript -JsonFile (Join-Path $RepoRoot "global.json") -InstallDir $DotnetDir -NoPath
+    & $installScript -Runtime dotnet -Channel 8.0 -InstallDir $DotnetDir -NoPath
+    & $installScript -Runtime dotnet -Channel 9.0 -InstallDir $DotnetDir -NoPath
+}
+
+$originalPath = $env:PATH
+$originalDotnetRoot = $env:DOTNET_ROOT
 Push-Location $RepoRoot
 
-# Load common build script helper methods
-. "$PSScriptRoot\build\common\common.ps1"
+try {
+    $env:DOTNET_NOLOGO = "1"
+    $env:DOTNET_CLI_TELEMETRY_OPTOUT = "1"
+    $env:MSBUILDDISABLENODEREUSE = "1"
 
-# Download tools
-Install-CommonBuildTools $RepoRoot
+    # Prefer dotnet on PATH, otherwise use the repo local .dotnet
+    $DotnetExe = (Get-Command dotnet -CommandType Application -TotalCount 1 -ErrorAction Ignore).Path
 
-# Clean and write git info
-Remove-Artifacts $RepoRoot
-Invoke-DotnetMSBuild $RepoRoot ("build\build.proj", "/t:Clean;WriteGitInfo", "/p:Configuration=$Configuration")
+    if (-not (Test-Dotnet $DotnetExe)) {
+        $DotnetExe = Join-Path $DotnetDir $(if ($IsWindowsOS) { "dotnet.exe" } else { "dotnet" })
 
-# Restore
-Invoke-DotnetMSBuild $RepoRoot ("build\build.proj", "/t:Restore", "/p:Configuration=$Configuration")
+        if (-not (Test-Dotnet $DotnetExe)) {
+            Install-Dotnet
+        }
 
-# Run build.proj
-Invoke-DotnetMSBuild $RepoRoot ("build\build.proj", "/t:Build", "/p:Configuration=$Configuration")
+        $env:DOTNET_ROOT = $DotnetDir
+        $env:PATH = "$DotnetDir$([IO.Path]::PathSeparator)$env:PATH"
+    }
 
-if (-not $SkipPack)
-{
-    # Run build.proj
-    Invoke-DotnetMSBuild $RepoRoot ("build\build.proj", "/t:Pack", "/p:Configuration=$Configuration")
+    Invoke-Exe $DotnetExe @("--info")
+
+    if (Test-Path $ArtifactsDir) {
+        Remove-Item $ArtifactsDir -Force -Recurse
+    }
+
+    Invoke-Exe $DotnetExe @("msbuild", "build/version.proj", "-nologo", "-v:m")
+    Invoke-Exe $DotnetExe @("build", "NuGet.Test.Helpers.slnx", "-c", $Configuration)
+
+    if (-not $SkipPack) {
+        Invoke-Exe $DotnetExe @("pack", "NuGet.Test.Helpers.slnx", "-c", $Configuration, "--no-build")
+    }
+
+    if (-not $SkipTests) {
+        Invoke-Exe $DotnetExe @("test", "--solution", "NuGet.Test.Helpers.slnx", "-c", $Configuration, "--no-build", "--results-directory", (Join-Path $ArtifactsDir "TestResults"), "--report-trx", "--hangdump", "--hangdump-timeout", "20m", "--hangdump-type", "Mini")
+    }
+}
+finally {
+    Pop-Location
+    $env:PATH = $originalPath
+    $env:DOTNET_ROOT = $originalDotnetRoot
 }
 
-if (-not $SkipTests)
-{
-    Invoke-DotnetExe $RepoRoot ("test", "NuGet.Test.Helpers.sln")
-}
-
-
-Pop-Location
 Write-Host "Success!"

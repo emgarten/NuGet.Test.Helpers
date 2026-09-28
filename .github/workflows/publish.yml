@@ -1,4 +1,4 @@
-# This workflow will build a .NET project
+# Build, test, and publish the package to nuget.org
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
 
 name: Publish to NuGet.org
@@ -8,32 +8,60 @@ on:
     types: [published]   # 🚀 auto-publish when a GitHub Release is published
   workflow_dispatch:      # ↩️ manual trigger fallback
 
+permissions:
+  contents: read
+
 jobs:
-  build-win:
+  build:
 
     runs-on: windows-latest
-    environment: release
-    permissions:
-      id-token: write   # request the GitHub OIDC token for trusted publishing
-      contents: read    # checkout still needs read access
+    timeout-minutes: 60
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
       with:
         fetch-tags: true
         fetch-depth: 0
+        persist-credentials: false
     - name: Setup .NET
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v6
       with:
-        dotnet-version: 10.0.x
+        global-json-file: global.json
     - name: Build
       run: ./build.ps1
       shell: pwsh
+    - name: Upload package
+      uses: actions/upload-artifact@v7
+      with:
+        name: nupkgs
+        path: artifacts/nupkgs/*.nupkg
+        if-no-files-found: error
+        retention-days: 7
+
+  # Push from a separate job so code that runs during the build and tests can't request the OIDC token
+  publish:
+    needs: build
+
+    runs-on: windows-latest
+    timeout-minutes: 15
+    environment: release
+    permissions:
+      id-token: write   # request the GitHub OIDC token for trusted publishing
+
+    steps:
+    - name: Download package
+      uses: actions/download-artifact@v8
+      with:
+        name: nupkgs
+        path: artifacts/nupkgs
     - name: NuGet login (OIDC -> temp API key)
       uses: NuGet/login@v1
       id: login
       with:
         user: emgarten
+    # Keep the backslashes, NuGet can't resolve this wildcard with forward slashes on Windows
     - name: Publish
-      run: dotnet nuget push artifacts\nupkgs\*.nupkg  --api-key ${{ steps.login.outputs.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
+      run: dotnet nuget push "artifacts\nupkgs\*.nupkg" --api-key $env:NUGET_API_KEY --source https://api.nuget.org/v3/index.json
       shell: pwsh
+      env:
+        NUGET_API_KEY: ${{ steps.login.outputs.NUGET_API_KEY }}

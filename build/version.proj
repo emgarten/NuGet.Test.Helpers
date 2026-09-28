@@ -1,0 +1,61 @@
+<Project DefaultTargets="WriteGitInfo">
+  <!--
+    Writes artifacts/obj/git.props with the version from the latest git tag.
+      v2.1.0 at HEAD            2.1.0
+      v2.1.0 + 5 commits        2.1.5
+      v2.2.0-beta + 5 commits   2.2.0-beta.5
+    Stable tags that don't end in .0, such as a v2.1.5 release tag, are skipped.
+  -->
+  <Target Name="WriteGitInfo">
+    <Exec Command="git describe --tags --abbrev=0 --match &quot;v*.0&quot; --match &quot;v*-*&quot;" ConsoleToMSBuild="true" StandardOutputImportance="low" ContinueOnError="true">
+      <Output TaskParameter="ConsoleOutput" PropertyName="GitTag" />
+      <Output TaskParameter="ExitCode" PropertyName="GitExitCode" />
+    </Exec>
+    <Exec Command="git rev-list --count $(GitTag)..HEAD" Condition="'$(GitExitCode)' == '0'" ConsoleToMSBuild="true" StandardOutputImportance="low" ContinueOnError="true">
+      <Output TaskParameter="ConsoleOutput" PropertyName="GitCommitCount" />
+      <Output TaskParameter="ExitCode" PropertyName="GitExitCode" />
+    </Exec>
+    <Exec Command="git rev-parse HEAD" Condition="'$(GitExitCode)' == '0'" ConsoleToMSBuild="true" StandardOutputImportance="low" ContinueOnError="true">
+      <Output TaskParameter="ConsoleOutput" PropertyName="GitCommit" />
+      <Output TaskParameter="ExitCode" PropertyName="GitExitCode" />
+    </Exec>
+    <Exec Command="git rev-parse --abbrev-ref HEAD" Condition="'$(GitExitCode)' == '0'" ConsoleToMSBuild="true" StandardOutputImportance="low" ContinueOnError="true">
+      <Output TaskParameter="ConsoleOutput" PropertyName="GitBranch" />
+      <Output TaskParameter="ExitCode" PropertyName="GitExitCode" />
+    </Exec>
+
+    <PropertyGroup Condition="'$(GitExitCode)' != '0'">
+      <Version>0.1.0-alpha</Version>
+      <GitBranch>unknown</GitBranch>
+      <GitCommit />
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(GitExitCode)' == '0'">
+      <Version>$(GitTag.TrimStart('v'))</Version>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(GitExitCode)' == '0' AND '$(GitCommitCount)' != '0'">
+      <Version Condition="$(Version.EndsWith('.0'))">$(Version.Substring(0, $(Version.LastIndexOf('.'))))</Version>
+      <Version>$(Version).$(GitCommitCount)</Version>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(GitExitCode)' == '0'">
+      <Version>$(Version)+git.$(GitCommit.Substring(0, 7))</Version>
+    </PropertyGroup>
+
+    <PropertyGroup>
+      <GitProps>
+        <Project>
+          <PropertyGroup>
+            <Version>$(Version)</Version>
+            <RepositoryBranch>$(GitBranch)</RepositoryBranch>
+            <RepositoryCommit>$(GitCommit)</RepositoryCommit>
+          </PropertyGroup>
+        </Project>
+      </GitProps>
+    </PropertyGroup>
+
+    <WriteLinesToFile File="$(MSBuildThisFileDirectory)..\artifacts\obj\git.props" Lines="$(GitProps)" Overwrite="true" WriteOnlyWhenDifferent="true" />
+    <Message Text="Version: $(Version)" Importance="high" />
+  </Target>
+</Project>
