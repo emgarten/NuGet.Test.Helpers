@@ -167,6 +167,23 @@ namespace NuGet.Test.Helpers.Tests
         }
 
         [Fact]
+        public void VerifyDependencyGroupsWithoutAFrameworkAreMerged()
+        {
+            var nuspec = new TestNuspec();
+            nuspec.Dependencies.Add(new PackageDependencyGroup(NuGetFramework.AnyFramework, new List<PackageDependency>() { new PackageDependency("b") }));
+            nuspec.Dependencies.Add(new PackageDependencyGroup(NuGetFramework.AnyFramework, new List<PackageDependency>() { new PackageDependency("c") }));
+
+            var xml = nuspec.Create();
+
+            xml.Root.Element("metadata").Element("dependencies").Elements("group").Should().BeEmpty();
+
+            var group = new NuspecReader(xml).GetDependencyGroups().Single();
+
+            group.TargetFramework.IsAny.Should().BeTrue();
+            group.Packages.Select(e => e.Id).Should().Equal("b", "c");
+        }
+
+        [Fact]
         public void VerifyDependencyIncludeAndExcludeAreSet()
         {
             var nuspec = new TestNuspec();
@@ -175,6 +192,22 @@ namespace NuGet.Test.Helpers.Tests
                 new PackageDependency("b", VersionRange.Parse("1.0.0"), new List<string>() { "Compile", "Runtime" }, new List<string>() { "Build" }));
 
             var dependency = new NuspecReader(nuspec.Create()).GetDependencyGroups().Single().Packages.Single();
+
+            dependency.Include.Should().Equal("Compile", "Runtime");
+            dependency.Exclude.Should().Equal("Build");
+        }
+
+        [Fact]
+        public void VerifyDependencyIncludeAndExcludeAreSetWithoutAFramework()
+        {
+            var nuspec = new TestNuspec();
+            nuspec.AddDependency(new PackageDependency("b", VersionRange.Parse("1.0.0"), new List<string>() { "Compile", "Runtime" }, new List<string>() { "Build" }));
+
+            var xml = nuspec.Create();
+
+            xml.Root.Element("metadata").Element("dependencies").Elements("group").Should().BeEmpty();
+
+            var dependency = new NuspecReader(xml).GetDependencyGroups().Single().Packages.Single();
 
             dependency.Include.Should().Equal("Compile", "Runtime");
             dependency.Exclude.Should().Equal("Build");
@@ -192,6 +225,18 @@ namespace NuGet.Test.Helpers.Tests
 
             groups.Select(e => e.TargetFramework.GetShortFolderName()).Should().Equal("net45", "net46");
             groups.Should().AllSatisfy(e => e.Items.Should().Equal("System.Net.Http"));
+        }
+
+        [Fact]
+        public void VerifyContentFilesAreSet()
+        {
+            var nuspec = new TestNuspec();
+            nuspec.ContentFiles.Add(new ContentFilesEntry("cs/net45/*.cs", "cs/net45/b.cs", "Compile", true, false));
+            nuspec.ContentFiles.Add(new ContentFilesEntry("any/any/*.txt", null, null, null, null));
+
+            var contentFiles = new NuspecReader(nuspec.Create()).GetContentFiles();
+
+            contentFiles.Should().BeEquivalentTo(nuspec.ContentFiles, options => options.WithStrictOrdering());
         }
 
         [Fact]

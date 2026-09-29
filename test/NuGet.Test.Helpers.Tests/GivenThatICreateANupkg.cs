@@ -363,6 +363,18 @@ namespace NuGet.Test.Helpers.Tests
         }
 
         [Fact]
+        public void VerifySaveReturnsTheSavedFile()
+        {
+            using (var folder = new TestFolder())
+            {
+                var path = TestNupkg.Create("packageA", "1.0.0").Save(folder);
+
+                path.Exists.Should().BeTrue();
+                path.Length.Should().Be(new FileInfo(path.FullName).Length);
+            }
+        }
+
+        [Fact]
         public void VerifySavingOverAnExistingNupkgThrows()
         {
             using (var folder = new TestFolder())
