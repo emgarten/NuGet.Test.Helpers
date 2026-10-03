@@ -1,5 +1,11 @@
 # Release Notes
 
+## 2.2.2
+* Fixed TestNuspec ignoring ContentFiles
+* Fixed TestNuspec dropping dependency include and exclude flags when no target framework is used
+* Fixed TestNuspec failing when Dependencies has more than one group without a target framework
+* Fixed TestNupkg.Save returning a FileInfo that reports the file as missing
+
 ## 2.2.1
 * Added a package readme
 

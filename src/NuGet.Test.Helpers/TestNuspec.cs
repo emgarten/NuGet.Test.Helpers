@@ -109,14 +109,9 @@ namespace NuGet.Test.Helpers
 
                 if (Dependencies.All(d => d.TargetFramework.IsAny))
                 {
-                    foreach (var d in Dependencies.Single().Packages)
+                    foreach (var d in Dependencies.SelectMany(e => e.Packages))
                     {
-                        var dependency = new XElement(XName.Get("dependency"));
-
-                        dependency.Add(new XAttribute(XName.Get("id"), d.Id));
-                        dependency.Add(new XAttribute(XName.Get("version"), d.VersionRange.ToLegacyShortString()));
-
-                        dependencies.Add(dependency);
+                        dependencies.Add(CreateDependencyNode(d));
                     }
                 }
                 else
@@ -133,22 +128,7 @@ namespace NuGet.Test.Helpers
 
                         foreach (var d in group.Packages)
                         {
-                            var dependency = new XElement(XName.Get("dependency"));
-
-                            dependency.Add(new XAttribute(XName.Get("id"), d.Id));
-                            dependency.Add(new XAttribute(XName.Get("version"), d.VersionRange.ToLegacyShortString()));
-
-                            if (d.Exclude.Count > 0)
-                            {
-                                dependency.Add(new XAttribute(XName.Get("exclude"), string.Join(",", d.Exclude)));
-                            }
-
-                            if (d.Include.Count > 0)
-                            {
-                                dependency.Add(new XAttribute(XName.Get("include"), string.Join(",", d.Include)));
-                            }
-
-                            groupNode.Add(dependency);
+                            groupNode.Add(CreateDependencyNode(d));
                         }
                     }
                 }
@@ -165,6 +145,32 @@ namespace NuGet.Test.Helpers
                     frameworkAssemblies.Add(fwaNode);
                     fwaNode.Add(new XAttribute("assemblyName", fwa.Key));
                     fwaNode.Add(new XAttribute("targetFramework", string.Join(",", fwa.Value.Select(f => f.GetShortFolderName()))));
+                }
+            }
+
+            if (ContentFiles.Count > 0)
+            {
+                var contentFiles = new XElement(XName.Get("contentFiles"));
+                metadata.Add(contentFiles);
+
+                foreach (var entry in ContentFiles)
+                {
+                    var filesNode = new XElement(XName.Get("files"));
+                    contentFiles.Add(filesNode);
+
+                    AddAttributeIfExists(filesNode, "include", entry.Include);
+                    AddAttributeIfExists(filesNode, "exclude", entry.Exclude);
+                    AddAttributeIfExists(filesNode, "buildAction", entry.BuildAction);
+
+                    if (entry.CopyToOutput.HasValue)
+                    {
+                        filesNode.Add(new XAttribute(XName.Get("copyToOutput"), entry.CopyToOutput.Value));
+                    }
+
+                    if (entry.Flatten.HasValue)
+                    {
+                        filesNode.Add(new XAttribute(XName.Get("flatten"), entry.Flatten.Value));
+                    }
                 }
             }
 
@@ -230,6 +236,34 @@ namespace NuGet.Test.Helpers
             {
                 root.Add(new XElement(XName.Get(elementName), value));
             }
+        }
+
+        private static void AddAttributeIfExists(XElement element, string attributeName, string? value)
+        {
+            if (!string.IsNullOrEmpty(value))
+            {
+                element.Add(new XAttribute(XName.Get(attributeName), value));
+            }
+        }
+
+        private static XElement CreateDependencyNode(PackageDependency dependency)
+        {
+            var dependencyNode = new XElement(XName.Get("dependency"));
+
+            dependencyNode.Add(new XAttribute(XName.Get("id"), dependency.Id));
+            dependencyNode.Add(new XAttribute(XName.Get("version"), dependency.VersionRange.ToLegacyShortString()));
+
+            if (dependency.Exclude.Count > 0)
+            {
+                dependencyNode.Add(new XAttribute(XName.Get("exclude"), string.Join(",", dependency.Exclude)));
+            }
+
+            if (dependency.Include.Count > 0)
+            {
+                dependencyNode.Add(new XAttribute(XName.Get("include"), string.Join(",", dependency.Include)));
+            }
+
+            return dependencyNode;
         }
     }
 }
