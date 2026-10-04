@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Xml.Linq;
 using AwesomeAssertions;
@@ -396,6 +397,170 @@ namespace NuGet.Test.Helpers.Tests
                 TestNupkg.Save(folder, TestNupkg.Create("packageA", "1.0.0"), TestNupkg.Create("packageB", "2.0.0"));
 
                 Directory.GetFiles(folder.Root).Select(Path.GetFileName).Should().BeEquivalentTo("packageA.1.0.0.nupkg", "packageB.2.0.0.nupkg");
+            }
+        }
+
+        [Fact]
+        public void VerifyNupkgHasAddedTextFile()
+        {
+            using (var folder = new TestFolder())
+            {
+                var nupkg = TestNupkg.Create("packageA", "1.0.0");
+                nupkg.AddTextFile("content/a.txt", "abc \u00fc");
+                var path = nupkg.Save(folder);
+
+                using (var reader = new PackageArchiveReader(path.FullName))
+                using (var stream = reader.GetStream("content/a.txt"))
+                using (var memoryStream = new MemoryStream())
+                {
+                    stream.CopyTo(memoryStream);
+
+                    memoryStream.ToArray().Should().Equal(0x61, 0x62, 0x63, 0x20, 0xC3, 0xBC);
+                }
+            }
+        }
+
+        [Fact]
+        public void VerifyAddingANullTextFileThrows()
+        {
+            var nupkg = TestNupkg.Create("packageA", "1.0.0");
+
+            var action = () => nupkg.AddTextFile("content/a.txt", null);
+
+            action.Should().Throw<ArgumentNullException>().WithParameterName("content");
+        }
+
+        [Fact]
+        public void VerifyNupkgIsSavedToAStream()
+        {
+            var nupkg = TestNupkg.Create("packageA", "1.0.0");
+            nupkg.AddFile("lib/net45/a.dll");
+
+            using (var stream = new MemoryStream())
+            {
+                nupkg.Save(stream);
+
+                stream.CanRead.Should().BeTrue();
+                stream.Position = 0;
+
+                using (var reader = new PackageArchiveReader(stream, leaveStreamOpen: true))
+                {
+                    reader.NuspecReader.GetId().Should().Be("packageA");
+                    reader.GetLibItems().Single().Items.Single().Should().Be("lib/net45/a.dll");
+                }
+            }
+
+            nupkg.LastSavePath.Should().BeNull();
+        }
+
+        [Fact]
+        public void VerifySavingToANullStreamThrows()
+        {
+            var nupkg = TestNupkg.Create("packageA", "1.0.0");
+
+            var action = () => nupkg.Save((Stream)null);
+
+            action.Should().Throw<ArgumentNullException>().WithParameterName("stream");
+        }
+
+        [Fact]
+        public void VerifyNupkgIsCreatedInMemory()
+        {
+            var nupkg = TestNupkg.Create("packageA", "1.0.0");
+            nupkg.AddFile("lib/net45/a.dll");
+
+            using (var reader = new PackageArchiveReader(new MemoryStream(nupkg.ToByteArray())))
+            {
+                reader.NuspecReader.GetId().Should().Be("packageA");
+                reader.GetLibItems().Single().Items.Single().Should().Be("lib/net45/a.dll");
+            }
+
+            nupkg.LastSavePath.Should().BeNull();
+        }
+
+        [Fact]
+        public void VerifyNupkgIsSavedWithTheFileName()
+        {
+            using (var folder = new TestFolder())
+            {
+                var nupkg = TestNupkg.Create("PackageA", "1.0");
+                nupkg.FileName = "packagea.1.0.0.nupkg";
+
+                var path = nupkg.Save(folder);
+
+                path.Name.Should().Be("packagea.1.0.0.nupkg");
+                path.Exists.Should().BeTrue();
+                nupkg.LastSavePath.Should().Be(path.FullName);
+            }
+        }
+
+        [Fact]
+        public void VerifySavingOverAnExistingNupkgWithOverwriteExisting()
+        {
+            using (var folder = new TestFolder())
+            {
+                var nupkg = TestNupkg.Create("packageA", "1.0.0");
+                nupkg.OverwriteExisting = true;
+                nupkg.AddFile("lib/net45/a.dll", "lib/net45/b.dll", "lib/net45/c.dll");
+                nupkg.Save(folder);
+
+                // The new package is smaller, verify the old content is removed.
+                nupkg.Files.Clear();
+                nupkg.AddFile("lib/net45/d.dll");
+                var path = nupkg.Save(folder);
+
+                using (var reader = new PackageArchiveReader(path.FullName))
+                {
+                    reader.GetLibItems().Single().Items.Should().Equal("lib/net45/d.dll");
+                }
+            }
+        }
+
+        [Fact]
+        public void VerifyNuspecEntryNameIsUsed()
+        {
+            using (var folder = new TestFolder())
+            {
+                var nupkg = TestNupkg.Create("packageA", "1.0.0");
+                nupkg.NuspecEntryName = "packageB.nuspec";
+                var path = nupkg.Save(folder);
+
+                using (var reader = new PackageArchiveReader(path.FullName))
+                {
+                    reader.GetNuspecFile().Should().Be("packageB.nuspec");
+                    reader.NuspecReader.GetId().Should().Be("packageA");
+                }
+            }
+        }
+
+        [Fact]
+        public void VerifyEntryLastWriteTimeIsUsedForAllEntries()
+        {
+            var nupkg = TestNupkg.Create("packageA", "1.0.0");
+            nupkg.AddFile("lib/net45/a.dll");
+            nupkg.EntryLastWriteTime = new DateTimeOffset(2020, 1, 2, 3, 4, 6, TimeSpan.FromHours(-8));
+
+            using (var zip = new ZipArchive(new MemoryStream(nupkg.ToByteArray()), ZipArchiveMode.Read))
+            {
+                zip.Entries.Select(e => e.FullName).Should().Equal("lib/net45/a.dll", "packageA.nuspec");
+                zip.Entries.Should().AllSatisfy(e => e.LastWriteTime.DateTime.Should().Be(new DateTime(2020, 1, 2, 3, 4, 6)));
+            }
+        }
+
+        [Fact]
+        public void VerifyNupkgBytesAreTheSameWhenEntryLastWriteTimeIsSet()
+        {
+            using (var folder = new TestFolder())
+            {
+                var nupkg = TestNupkg.Create("packageA", "1.0.0");
+                nupkg.AddFile("lib/net45/a.dll");
+                nupkg.EntryLastWriteTime = new DateTimeOffset(2020, 1, 2, 3, 4, 6, TimeSpan.Zero);
+
+                var bytes = nupkg.ToByteArray();
+                var path = nupkg.Save(folder);
+
+                nupkg.ToByteArray().Should().Equal(bytes);
+                File.ReadAllBytes(path.FullName).Should().Equal(bytes);
             }
         }
 

@@ -18,6 +18,30 @@ namespace NuGet.Test.Helpers
 
         public string? LastSavePath { get; private set; }
 
+        /// <summary>
+        /// File name used when saving to a folder.
+        /// Defaults to {id}.{version}.nupkg, or {id}.{version}.symbols.nupkg for symbol packages.
+        /// </summary>
+        public string? FileName { get; set; }
+
+        /// <summary>
+        /// Replace an existing file when saving to a folder. By default saving throws if the file exists.
+        /// </summary>
+        public bool OverwriteExisting { get; set; }
+
+        /// <summary>
+        /// Path of the nuspec entry in the package. Defaults to {id}.nuspec.
+        /// </summary>
+        public string? NuspecEntryName { get; set; }
+
+        /// <summary>
+        /// Last write time of every entry in the package. Set this to produce the same bytes each time the package is saved.
+        /// Compressed bytes can still differ between .NET versions.
+        /// Zip entries store the date and time without an offset, at two second precision, for years 1980 to 2107.
+        /// Defaults to the time each entry is written.
+        /// </summary>
+        public DateTimeOffset? EntryLastWriteTime { get; set; }
+
         public TestNupkg()
         {
             Nuspec = new TestNuspec();
@@ -58,6 +82,16 @@ namespace NuGet.Test.Helpers
             }
         }
 
+        /// <summary>
+        /// Add a file with the given text, encoded as UTF-8 without a byte order mark.
+        /// </summary>
+        public void AddTextFile(string path, string content)
+        {
+            ArgumentNullException.ThrowIfNull(content);
+
+            AddFile(path, Encoding.UTF8.GetBytes(content));
+        }
+
         public void AddDependency(string id)
         {
             Nuspec.AddDependency(id);
@@ -83,49 +117,32 @@ namespace NuGet.Test.Helpers
 
         public FileInfo Save(string outputDir)
         {
-            var id = Nuspec.Id;
-            var version = Nuspec.Version;
+            var fileName = FileName;
 
-            var fileName = $"{id}.{version}";
-
-            if (Nuspec.IsSymbolPackage)
+            if (string.IsNullOrEmpty(fileName))
             {
-                fileName += ".symbols";
-            }
+                fileName = $"{Nuspec.Id}.{Nuspec.Version}";
 
-            fileName += ".nupkg";
+                if (Nuspec.IsSymbolPackage)
+                {
+                    fileName += ".symbols";
+                }
+
+                fileName += ".nupkg";
+            }
 
             var nupkgFile = new FileInfo(Path.Combine(outputDir, fileName));
 
-            if (nupkgFile.Exists)
+            if (nupkgFile.Exists && !OverwriteExisting)
             {
                 throw new InvalidOperationException($"File already exists: {nupkgFile.FullName}");
             }
 
             nupkgFile.Directory?.Create();
 
-            using (var zip = new ZipArchive(File.Create(nupkgFile.FullName), ZipArchiveMode.Create))
+            using (var stream = File.Create(nupkgFile.FullName))
             {
-                foreach (var file in Files)
-                {
-                    var entry = zip.CreateEntry(file.Path, CompressionLevel.Optimal);
-
-                    using (var stream = entry.Open())
-                    {
-                        stream.Write(file.Bytes, 0, file.Bytes.Length);
-                    }
-                }
-
-                var nuspecEntry = zip.CreateEntry($"{id}.nuspec", CompressionLevel.Optimal);
-
-                using (var stream = nuspecEntry.Open())
-                {
-                    var xml = Nuspec.Create().ToString();
-
-                    var xmlBytes = Encoding.UTF8.GetBytes(xml);
-
-                    stream.Write(xmlBytes, 0, xmlBytes.Length);
-                }
+                Save(stream);
             }
 
             // Update the state cached by the Exists check above.
@@ -134,6 +151,40 @@ namespace NuGet.Test.Helpers
             LastSavePath = nupkgFile.FullName;
 
             return nupkgFile;
+        }
+
+        /// <summary>
+        /// Write the package to a stream. The stream is left open.
+        /// </summary>
+        public void Save(Stream stream)
+        {
+            ArgumentNullException.ThrowIfNull(stream);
+
+            using (var zip = new ZipArchive(stream, ZipArchiveMode.Create, leaveOpen: true))
+            {
+                foreach (var file in Files)
+                {
+                    AddEntry(zip, file.Path, file.Bytes);
+                }
+
+                var nuspecEntryName = string.IsNullOrEmpty(NuspecEntryName) ? $"{Nuspec.Id}.nuspec" : NuspecEntryName;
+                var xml = Nuspec.Create().ToString();
+
+                AddEntry(zip, nuspecEntryName, Encoding.UTF8.GetBytes(xml));
+            }
+        }
+
+        /// <summary>
+        /// Create the package in memory.
+        /// </summary>
+        public byte[] ToByteArray()
+        {
+            using (var stream = new MemoryStream())
+            {
+                Save(stream);
+
+                return stream.ToArray();
+            }
         }
 
         public static void Save(string outputDir, params TestNupkg[] nupkgs)
@@ -162,6 +213,22 @@ namespace NuGet.Test.Helpers
         public override string ToString()
         {
             return Nuspec.ToString();
+        }
+
+        private void AddEntry(ZipArchive zip, string path, byte[] bytes)
+        {
+            var entry = zip.CreateEntry(path, CompressionLevel.Optimal);
+
+            // The time can't be changed after the entry is opened.
+            if (EntryLastWriteTime.HasValue)
+            {
+                entry.LastWriteTime = EntryLastWriteTime.Value;
+            }
+
+            using (var stream = entry.Open())
+            {
+                stream.Write(bytes, 0, bytes.Length);
+            }
         }
     }
 }
