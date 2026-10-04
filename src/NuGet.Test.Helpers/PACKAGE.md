@@ -17,7 +17,7 @@ using (var folder = new TestFolder())
 }
 ```
 
-Use `TestNuspec` to set package metadata such as authors, tags, package types, icons, and readmes, and `TestLogger` to capture NuGet log messages.
+Use `TestNuspec` to set package metadata such as authors, tags, licenses, repositories, package types, framework references, icons, and readmes, and `TestLogger` to capture NuGet log messages. Use `TestNupkg.ToByteArray` or `TestNupkg.Save(Stream)` to create packages in memory, and `TestNupkg.EntryLastWriteTime` to get the same bytes each time.
 
 ## Documentation
 

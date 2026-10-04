@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
@@ -34,9 +35,37 @@ namespace NuGet.Test.Helpers
         public string? Serviceable { get; set; }
         public bool IsSymbolPackage { get; set; }
         public string? Readme { get; set; }
+        public string? RepositoryType { get; set; }
+        public string? RepositoryUrl { get; set; }
+        public string? RepositoryBranch { get; set; }
+        public string? RepositoryCommit { get; set; }
+
+        /// <summary>
+        /// License expression, written as a license element with type expression.
+        /// </summary>
+        public string? LicenseExpression { get; set; }
+
+        /// <summary>
+        /// Path of the license file in the package, written as a license element with type file.
+        /// The file is not added to the package.
+        /// </summary>
+        public string? LicenseFile { get; set; }
+
+        /// <summary>
+        /// Version attribute of the license element.
+        /// </summary>
+        public string? LicenseVersion { get; set; }
+
         public List<string> PackageTypes { get; set; } = new List<string>();
+
+        /// <summary>
+        /// Versions for the names in PackageTypes. Package types without an entry are written without a version.
+        /// </summary>
+        public Dictionary<string, string> PackageTypeVersions { get; set; } = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
         public List<PackageDependencyGroup> Dependencies { get; set; } = new List<PackageDependencyGroup>();
         public List<KeyValuePair<string, List<NuGetFramework>>> FrameworkAssemblies { get; set; } = new List<KeyValuePair<string, List<NuGetFramework>>>();
+        public List<FrameworkReferenceGroup> FrameworkReferences { get; set; } = new List<FrameworkReferenceGroup>();
         public List<ContentFilesEntry> ContentFiles { get; set; } = new List<ContentFilesEntry>();
 
         /// <summary>
@@ -89,6 +118,8 @@ namespace NuGet.Test.Helpers
             AddIfExists(metadata, "iconUrl", IconUrl);
             AddIfExists(metadata, "icon", Icon);
             AddIfExists(metadata, "licenseUrl", LicenseUrl);
+            AddLicense(metadata, "expression", LicenseExpression, LicenseVersion);
+            AddLicense(metadata, "file", LicenseFile, LicenseVersion);
             AddIfExists(metadata, "copyright", Copyright);
             AddIfExists(metadata, "requireLicenseAcceptance", RequireLicenseAcceptance);
             AddIfExists(metadata, "tags", Tags);
@@ -96,10 +127,21 @@ namespace NuGet.Test.Helpers
             AddIfExists(metadata, "serviceable", Serviceable);
             AddIfExists(metadata, "readme", Readme);
 
+            var repository = new XElement(XName.Get("repository"));
+            AddAttributeIfExists(repository, "type", RepositoryType);
+            AddAttributeIfExists(repository, "url", RepositoryUrl);
+            AddAttributeIfExists(repository, "branch", RepositoryBranch);
+            AddAttributeIfExists(repository, "commit", RepositoryCommit);
+
+            if (repository.HasAttributes)
+            {
+                metadata.Add(repository);
+            }
+
             if (PackageTypes.Count > 0)
             {
                 metadata.Add(new XElement(XName.Get("packageTypes"),
-                    PackageTypes.Select(s => new XElement(XName.Get("packageType"), new XAttribute(XName.Get("name"), s)))));
+                    PackageTypes.Select(CreatePackageTypeNode)));
             }
 
             if (Dependencies.Count > 0)
@@ -145,6 +187,24 @@ namespace NuGet.Test.Helpers
                     frameworkAssemblies.Add(fwaNode);
                     fwaNode.Add(new XAttribute("assemblyName", fwa.Key));
                     fwaNode.Add(new XAttribute("targetFramework", string.Join(",", fwa.Value.Select(f => f.GetShortFolderName()))));
+                }
+            }
+
+            if (FrameworkReferences.Count > 0)
+            {
+                var frameworkReferences = new XElement(XName.Get("frameworkReferences"));
+                metadata.Add(frameworkReferences);
+
+                foreach (var group in FrameworkReferences)
+                {
+                    var groupNode = new XElement(XName.Get("group"));
+                    frameworkReferences.Add(groupNode);
+                    groupNode.Add(new XAttribute(XName.Get("targetFramework"), group.TargetFramework.GetShortFolderName()));
+
+                    foreach (var reference in group.FrameworkReferences)
+                    {
+                        groupNode.Add(new XElement(XName.Get("frameworkReference"), new XAttribute(XName.Get("name"), reference.Name)));
+                    }
                 }
             }
 
@@ -225,6 +285,48 @@ namespace NuGet.Test.Helpers
             Dependencies.Add(group);
         }
 
+        /// <summary>
+        /// Add a package type.
+        /// </summary>
+        public void AddPackageType(string name)
+        {
+            ArgumentNullException.ThrowIfNull(name);
+
+            PackageTypes.Add(name);
+        }
+
+        /// <summary>
+        /// Add a package type and set its version in PackageTypeVersions.
+        /// </summary>
+        public void AddPackageType(string name, string version)
+        {
+            ArgumentNullException.ThrowIfNull(version);
+
+            AddPackageType(name);
+            PackageTypeVersions[name] = version;
+        }
+
+        /// <summary>
+        /// Add a framework reference, such as Microsoft.AspNetCore.App, to the group for the framework.
+        /// </summary>
+        public void AddFrameworkReference(NuGetFramework framework, string name)
+        {
+            ArgumentNullException.ThrowIfNull(framework);
+            ArgumentNullException.ThrowIfNull(name);
+
+            var references = new List<FrameworkReference>() { new FrameworkReference(name) };
+            var index = FrameworkReferences.FindIndex(e => e.TargetFramework.Equals(framework));
+
+            if (index < 0)
+            {
+                FrameworkReferences.Add(new FrameworkReferenceGroup(framework, references));
+            }
+            else
+            {
+                FrameworkReferences[index] = new FrameworkReferenceGroup(framework, FrameworkReferences[index].FrameworkReferences.Concat(references).ToList());
+            }
+        }
+
         public override string ToString()
         {
             return $"{Id} {Version}";
@@ -244,6 +346,28 @@ namespace NuGet.Test.Helpers
             {
                 element.Add(new XAttribute(XName.Get(attributeName), value));
             }
+        }
+
+        private static void AddLicense(XElement root, string type, string? value, string? version)
+        {
+            if (!string.IsNullOrEmpty(value))
+            {
+                var license = new XElement(XName.Get("license"), new XAttribute(XName.Get("type"), type), value);
+                AddAttributeIfExists(license, "version", version);
+                root.Add(license);
+            }
+        }
+
+        private XElement CreatePackageTypeNode(string name)
+        {
+            var packageTypeNode = new XElement(XName.Get("packageType"), new XAttribute(XName.Get("name"), name));
+
+            if (PackageTypeVersions.TryGetValue(name, out var version))
+            {
+                AddAttributeIfExists(packageTypeNode, "version", version);
+            }
+
+            return packageTypeNode;
         }
 
         private static XElement CreateDependencyNode(PackageDependency dependency)

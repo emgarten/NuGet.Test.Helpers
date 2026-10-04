@@ -1,5 +1,14 @@
 # Release Notes
 
+## 2.2.4
+* Added TestNupkg.ToByteArray and TestNupkg.Save(Stream) to create packages in memory
+* Added TestNupkg.AddTextFile to add UTF-8 text files
+* Added TestNupkg.FileName and TestNupkg.OverwriteExisting to control the saved file
+* Added TestNupkg.NuspecEntryName to change the path of the nuspec in the package
+* Added TestNupkg.EntryLastWriteTime to create packages with the same bytes each time
+* Added TestNuspec license, repository, and framework reference metadata
+* Added package type versions with TestNuspec.AddPackageType and TestNuspec.PackageTypeVersions
+
 ## 2.2.2
 * Fixed TestNuspec ignoring ContentFiles
 * Fixed TestNuspec dropping dependency include and exclude flags when no target framework is used

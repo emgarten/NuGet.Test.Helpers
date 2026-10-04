@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
@@ -70,7 +71,10 @@ namespace NuGet.Test.Helpers.Tests
             var nuspec = new TestNuspec()
             {
                 MinClientVersion = string.Empty,
-                Title = string.Empty
+                Title = string.Empty,
+                LicenseExpression = string.Empty,
+                LicenseFile = string.Empty,
+                RepositoryType = string.Empty
             };
 
             var metadata = nuspec.Create().Root.Element("metadata");
@@ -237,6 +241,150 @@ namespace NuGet.Test.Helpers.Tests
             var contentFiles = new NuspecReader(nuspec.Create()).GetContentFiles();
 
             contentFiles.Should().BeEquivalentTo(nuspec.ContentFiles, options => options.WithStrictOrdering());
+        }
+
+        [Fact]
+        public void VerifyLicenseExpressionIsSet()
+        {
+            var nuspec = new TestNuspec()
+            {
+                LicenseExpression = "MIT OR Apache-2.0"
+            };
+
+            var xml = nuspec.Create();
+
+            xml.Root.Element("metadata").Element("license").Attribute("version").Should().BeNull();
+
+            var license = new NuspecReader(xml).GetLicenseMetadata();
+
+            license.Type.Should().Be(LicenseType.Expression);
+            license.License.Should().Be("MIT OR Apache-2.0");
+            license.LicenseExpression.Should().NotBeNull();
+        }
+
+        [Fact]
+        public void VerifyLicenseFileIsSet()
+        {
+            var nuspec = new TestNuspec()
+            {
+                LicenseFile = "LICENSE.txt"
+            };
+
+            var license = new NuspecReader(nuspec.Create()).GetLicenseMetadata();
+
+            license.Type.Should().Be(LicenseType.File);
+            license.License.Should().Be("LICENSE.txt");
+        }
+
+        [Fact]
+        public void VerifyLicenseVersionIsSet()
+        {
+            var nuspec = new TestNuspec()
+            {
+                LicenseExpression = "MIT",
+                LicenseVersion = "2.0.0"
+            };
+
+            var license = new NuspecReader(nuspec.Create()).GetLicenseMetadata();
+
+            license.Version.Should().Be(new Version(2, 0, 0));
+        }
+
+        [Fact]
+        public void VerifyRepositoryIsSet()
+        {
+            var nuspec = new TestNuspec()
+            {
+                RepositoryType = "git",
+                RepositoryUrl = "https://example.org/repo.git",
+                RepositoryBranch = "main",
+                RepositoryCommit = "0123456789abcdef"
+            };
+
+            var repository = new NuspecReader(nuspec.Create()).GetRepositoryMetadata();
+
+            repository.Type.Should().Be("git");
+            repository.Url.Should().Be("https://example.org/repo.git");
+            repository.Branch.Should().Be("main");
+            repository.Commit.Should().Be("0123456789abcdef");
+        }
+
+        [Fact]
+        public void VerifyRepositoryOnlyHasTheSetAttributes()
+        {
+            var nuspec = new TestNuspec()
+            {
+                RepositoryType = "git"
+            };
+
+            var repository = nuspec.Create().Root.Element("metadata").Element("repository");
+
+            repository.Attributes().Select(e => e.Name.LocalName).Should().Equal("type");
+        }
+
+        [Fact]
+        public void VerifyFrameworkReferencesAreGroupedByFramework()
+        {
+            var nuspec = new TestNuspec();
+            nuspec.AddFrameworkReference(NuGetFramework.Parse("net8.0"), "Microsoft.AspNetCore.App");
+            nuspec.AddFrameworkReference(NuGetFramework.Parse("net9.0"), "Microsoft.WindowsDesktop.App");
+            nuspec.AddFrameworkReference(NuGetFramework.Parse("net8.0"), "Microsoft.WindowsDesktop.App");
+
+            var groups = new NuspecReader(nuspec.Create()).GetFrameworkRefGroups()
+                .ToDictionary(e => e.TargetFramework.GetShortFolderName(), e => e.FrameworkReferences.Select(r => r.Name).ToList());
+
+            groups.Should().HaveCount(2);
+            groups["net8.0"].Should().BeEquivalentTo("Microsoft.AspNetCore.App", "Microsoft.WindowsDesktop.App");
+            groups["net9.0"].Should().BeEquivalentTo("Microsoft.WindowsDesktop.App");
+        }
+
+        [Fact]
+        public void VerifyPackageTypesAreSet()
+        {
+            var nuspec = new TestNuspec();
+            nuspec.AddPackageType("DotnetTool");
+            nuspec.AddPackageType("CustomType", "1.2.3");
+
+            var xml = nuspec.Create();
+
+            xml.Root.Element("metadata").Element("packageTypes").Elements("packageType")
+                .Select(e => (string)e.Attribute("version"))
+                .Should().Equal(null, "1.2.3");
+
+            new NuspecReader(xml).GetPackageTypes().Select(e => $"{e.Name} {e.Version}").Should().Equal(
+                "DotnetTool 0.0",
+                "CustomType 1.2.3");
+        }
+
+        [Fact]
+        public void VerifyPackageTypeVersionsIgnoreCase()
+        {
+            var nuspec = new TestNuspec();
+            nuspec.PackageTypes.Add("Dependency");
+            nuspec.PackageTypeVersions["dependency"] = "2.0";
+
+            var packageType = new NuspecReader(nuspec.Create()).GetPackageTypes().Single();
+
+            packageType.Name.Should().Be("Dependency");
+            packageType.Version.Should().Be(new Version(2, 0));
+        }
+
+        [Fact]
+        public void VerifyAddingNullValuesThrows()
+        {
+            var nuspec = new TestNuspec();
+
+            var nullPackageType = () => nuspec.AddPackageType(null);
+            var nullPackageTypeVersion = () => nuspec.AddPackageType("a", null);
+            var nullFramework = () => nuspec.AddFrameworkReference(null, "a");
+            var nullFrameworkReference = () => nuspec.AddFrameworkReference(NuGetFramework.Parse("net8.0"), null);
+
+            nullPackageType.Should().Throw<ArgumentNullException>().WithParameterName("name");
+            nullPackageTypeVersion.Should().Throw<ArgumentNullException>().WithParameterName("version");
+            nullFramework.Should().Throw<ArgumentNullException>().WithParameterName("framework");
+            nullFrameworkReference.Should().Throw<ArgumentNullException>().WithParameterName("name");
+            nuspec.PackageTypes.Should().BeEmpty();
+            nuspec.FrameworkReferences.Should().BeEmpty();
         }
 
         [Fact]

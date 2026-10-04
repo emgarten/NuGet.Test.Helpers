@@ -65,6 +65,55 @@ nupkg.AddFile("lib/net8.0/MyPackage.dll", fileBytes);
 nupkg.Save(outputDir);
 ```
 
+`TestNuspec` also writes license, repository, package type, and framework reference metadata:
+
+```csharp
+var nuspec = new TestNuspec()
+{
+    Id = "MyPackage",
+    Version = "1.0.0",
+    LicenseExpression = "MIT",
+    RepositoryType = "git",
+    RepositoryUrl = "https://github.com/example/mypackage"
+};
+
+nuspec.AddPackageType("CustomType", "1.0.0");
+nuspec.AddFrameworkReference(NuGetFramework.Parse("net8.0"), "Microsoft.AspNetCore.App");
+```
+
+### Creating a package in memory
+
+```csharp
+var nupkg = TestNupkg.Create("MyPackage", "1.0.0");
+nupkg.AddTextFile("content/readme.txt", "Hello");
+
+// Use a fixed time for all zip entries to get the same bytes each time
+// Compressed bytes can differ between .NET versions
+nupkg.EntryLastWriteTime = new DateTimeOffset(2020, 1, 1, 0, 0, 0, TimeSpan.Zero);
+
+byte[] bytes = nupkg.ToByteArray();
+
+// Or write to any stream, the stream is left open
+nupkg.Save(stream);
+```
+
+### Controlling the saved file
+
+```csharp
+var nupkg = TestNupkg.Create("MyPackage", "1.0.0");
+
+// Defaults to MyPackage.1.0.0.nupkg
+nupkg.FileName = "mypackage.1.0.0.nupkg";
+
+// Defaults to MyPackage.nuspec
+nupkg.NuspecEntryName = "mypackage.nuspec";
+
+// Replace the file if it exists instead of throwing
+nupkg.OverwriteExisting = true;
+
+nupkg.Save(outputDir);
+```
+
 ### Capturing NuGet log output
 
 ```csharp
@@ -81,8 +130,8 @@ var warnings = logger.GetMessages(LogLevel.Warning);
 
 | Class | Description |
 | --- | --- |
-| **TestNupkg** | Creates `.nupkg` package files with configurable files and dependencies |
-| **TestNuspec** | Defines package metadata (id, version, authors, dependencies, etc.) |
+| **TestNupkg** | Creates `.nupkg` packages on disk or in memory with configurable files and dependencies |
+| **TestNuspec** | Defines package metadata (id, version, authors, dependencies, license, repository, etc.) |
 | **TestNupkgFile** | Represents a file entry inside a `.nupkg` archive |
 | **TestFolder** | Creates a temporary directory that auto-cleans on dispose |
 | **TestLogger** | In-memory `ILogger` implementation for capturing NuGet log messages |
