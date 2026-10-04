@@ -128,6 +128,9 @@ namespace NuGet.Test.Helpers
                 }
             }
 
+            // Update the state cached by the Exists check above.
+            nupkgFile.Refresh();
+
             LastSavePath = nupkgFile.FullName;
 
             return nupkgFile;
